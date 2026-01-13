@@ -1,0 +1,107 @@
+import { Tabs } from 'expo-router';
+import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { Home, Calendar, Trophy, User } from 'lucide-react-native';
+
+import { HapticTab } from '@/components/haptic-tab';
+import { Colors, ClubColors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAuth } from '@/src/context/AuthContext';
+
+export default function TabLayout() {
+  const colorScheme = useColorScheme();
+  const { isLoading } = useAuth();
+
+  // Show loading spinner while auth is initializing
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-cs-background">
+        <ActivityIndicator size="large" color={ClubColors.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: ClubColors.secondary,
+        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: ClubColors.primary,
+        },
+        headerTintColor: '#ffffff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        tabBarButton: HapticTab,
+        tabBarStyle: {
+          backgroundColor: ClubColors.primary,
+          borderTopColor: ClubColors.primaryDark,
+          borderTopWidth: 1,
+          paddingTop: 8,
+          paddingBottom: 8,
+          height: 70,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '500',
+          marginTop: 4,
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Inicio',
+          headerTitle: 'Club Seminario',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="a-la-cancha"
+        options={{
+          title: 'A la Cancha',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="resultados"
+        options={{
+          title: 'Resultados',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Trophy size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="perfil"
+        options={{
+          title: 'Perfil',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+        }}
+      />
+      {/* Hidden screens */}
+      <Tabs.Screen
+        name="mi-equipo"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="notificaciones"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          href: null,
+        }}
+      />
+    </Tabs>
+  );
+}
