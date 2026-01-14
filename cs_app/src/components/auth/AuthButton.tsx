@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, Text, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { ClubColors, BorderRadius, Spacing } from '@/constants/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -25,17 +25,21 @@ export function AuthButton({
   style,
 }: AuthButtonProps) {
   const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+    opacity: opacity.value,
   }));
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.97, { damping: 15 });
+    scale.value = withSpring(0.96, { damping: 15, stiffness: 400 });
+    opacity.value = withTiming(0.9, { duration: 100 });
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15 });
+    scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+    opacity.value = withTiming(1, { duration: 100 });
   };
 
   const isDisabled = disabled || loading;

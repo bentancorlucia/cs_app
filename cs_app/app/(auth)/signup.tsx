@@ -13,7 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, router } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated';
-import { ArrowLeft, Mail, User, CreditCard, CheckCircle, AlertCircle, Info, Phone, Lock } from 'lucide-react-native';
+import { ChevronLeft, Mail, User, CreditCard, CheckCircle, AlertCircle, Info, Phone, Lock } from 'lucide-react-native';
 
 import { AuthInput, AuthButton } from '@/src/components/auth';
 import { ClubColors, Glass, BorderRadius, Spacing } from '@/constants/theme';
@@ -177,11 +177,12 @@ export default function SignupScreen() {
           style={styles.header}
         >
           <Animated.View entering={FadeInDown.duration(500)} style={styles.headerContent}>
-            <Link href="/(auth)/login" asChild>
-              <Pressable style={styles.backButton}>
-                <ArrowLeft size={24} color={ClubColors.white} />
-              </Pressable>
-            </Link>
+            <Pressable
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <ChevronLeft size={24} color="white" />
+            </Pressable>
             <Text style={styles.title}>Crear Cuenta</Text>
             <Text style={styles.subtitle}>Únete a Club Seminario</Text>
           </Animated.View>
@@ -319,18 +320,21 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xl,
   },
   header: {
-    paddingTop: 56,
-    paddingBottom: 32,
+    paddingTop: 60,
+    paddingBottom: 40,
     paddingHorizontal: Spacing.lg,
   },
   headerContent: {
     position: 'relative',
   },
   backButton: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    padding: Spacing.xs,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xl,
   },
   title: {
     fontSize: 28,

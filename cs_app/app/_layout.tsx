@@ -38,10 +38,37 @@ export default function RootLayout() {
     <AuthProvider>
       <ThemeProvider value={colorScheme === 'dark' ? ClubDarkTheme : ClubLightTheme}>
         <AuthGuard>
-          <Stack>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: ClubColors.background },
+              animation: 'fade',
+              animationDuration: 300,
+            }}
+          >
+            <Stack.Screen
+              name="(auth)"
+              options={{
+                animation: 'fade',
+                animationDuration: 300,
+              }}
+            />
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                animation: 'fade',
+                animationDuration: 300,
+              }}
+            />
+            <Stack.Screen
+              name="modal"
+              options={{
+                presentation: 'modal',
+                title: 'Modal',
+                animation: 'slide_from_bottom',
+                animationDuration: 350,
+              }}
+            />
           </Stack>
         </AuthGuard>
         <StatusBar style="auto" />

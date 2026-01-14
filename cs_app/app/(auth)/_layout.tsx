@@ -7,12 +7,34 @@ export default function AuthLayout() {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: ClubColors.background },
-        animation: 'fade',
+        animation: 'fade_from_bottom',
+        animationDuration: 350,
+        gestureEnabled: true,
+        gestureDirection: 'horizontal',
+        fullScreenGestureEnabled: true,
       }}
     >
-      <Stack.Screen name="login" />
-      <Stack.Screen name="signup" />
-      <Stack.Screen name="forgot-password" />
+      <Stack.Screen
+        name="login"
+        options={{
+          animation: 'fade',
+          animationDuration: 300,
+        }}
+      />
+      <Stack.Screen
+        name="signup"
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 350,
+        }}
+      />
+      <Stack.Screen
+        name="forgot-password"
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 350,
+        }}
+      />
     </Stack>
   );
 }

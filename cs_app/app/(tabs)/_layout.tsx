@@ -1,7 +1,8 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import { Home, Calendar, Trophy, User } from 'lucide-react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { ClubColors } from '@/constants/theme';
@@ -13,9 +14,12 @@ export default function TabLayout() {
   // Show loading spinner while auth is initializing
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-cs-background">
+      <Animated.View
+        entering={FadeIn.duration(200)}
+        className="flex-1 items-center justify-center bg-cs-background"
+      >
         <ActivityIndicator size="large" color={ClubColors.primary} />
-      </View>
+      </Animated.View>
     );
   }
 
@@ -46,6 +50,8 @@ export default function TabLayout() {
           fontWeight: '500',
           marginTop: 4,
         },
+        sceneStyle: { backgroundColor: ClubColors.background },
+        animation: 'shift',
       }}
     >
       <Tabs.Screen
