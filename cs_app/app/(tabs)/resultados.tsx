@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingUp, Minus, TrendingDown, Calendar, Trophy } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInRight, FadeIn, FadeInUp } from 'react-native-reanimated';
-import { ClubColors } from '@/constants/theme';
+import { ClubColors, Glass } from '@/constants/theme';
 import { Match } from '@/src/types/database';
 
 // Extended Match type with scores for completed matches
@@ -218,164 +218,166 @@ export default function ResultadosScreen() {
   );
 
   return (
-    <View className="flex-1" style={{ backgroundColor: '#0d0d0d' }}>
-      {/* Header with Gradient */}
-      <LinearGradient
-        colors={[ClubColors.primary, ClubColors.primaryDark, '#1a0a10']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        className="px-5 pt-14 pb-6"
-      >
-        <Animated.View entering={FadeInDown.duration(500)}>
-          <Text className="text-white text-3xl font-bold">Historial de Resultados</Text>
-        </Animated.View>
-      </LinearGradient>
-
+    <View style={{ flex: 1, backgroundColor: ClubColors.background }}>
       <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        bounces={true}
       >
+        {/* Header with Gradient */}
+        <LinearGradient
+          colors={[ClubColors.primary, ClubColors.primaryDark, ClubColors.background]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 24 }}
+        >
+          <Animated.View entering={FadeInDown.duration(500)}>
+            <Text className="text-white text-3xl font-bold">Historial de Resultados</Text>
+          </Animated.View>
+        </LinearGradient>
+
         {/* Stats Summary */}
         <Animated.View
           entering={FadeInUp.duration(500).delay(100)}
-          className="px-5 py-4 flex-row"
-          style={{ gap: 12 }}
+          style={{ paddingHorizontal: 20, paddingVertical: 16, flexDirection: 'row', gap: 12 }}
         >
-          <LinearGradient
-            colors={['#166534', '#14532d']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="flex-1 p-4 rounded-2xl items-center"
+          <View
             style={{
-              shadowColor: '#22c55e',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
-              elevation: 4,
+              flex: 1,
+              padding: 16,
+              alignItems: 'center',
+              backgroundColor: 'rgba(34, 197, 94, 0.15)',
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: 'rgba(34, 197, 94, 0.2)',
             }}
           >
             <TrendingUp size={24} color="#4ade80" />
-            <Text className="text-4xl font-bold text-white mt-2">{stats.wins}</Text>
-            <Text className="text-green-300/70 text-sm font-medium">Victorias</Text>
-          </LinearGradient>
+            <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 8 }}>{stats.wins}</Text>
+            <Text style={{ color: '#4ade80', fontSize: 14, fontWeight: '500' }}>Victorias</Text>
+          </View>
 
-          <LinearGradient
-            colors={['#854d0e', '#713f12']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="flex-1 p-4 rounded-2xl items-center"
+          <View
             style={{
-              shadowColor: '#eab308',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
-              elevation: 4,
+              flex: 1,
+              padding: 16,
+              alignItems: 'center',
+              backgroundColor: 'rgba(234, 179, 8, 0.15)',
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: 'rgba(234, 179, 8, 0.2)',
             }}
           >
             <Minus size={24} color="#fde047" />
-            <Text className="text-4xl font-bold text-white mt-2">{stats.draws}</Text>
-            <Text className="text-yellow-300/70 text-sm font-medium">Empates</Text>
-          </LinearGradient>
+            <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 8 }}>{stats.draws}</Text>
+            <Text style={{ color: '#fde047', fontSize: 14, fontWeight: '500' }}>Empates</Text>
+          </View>
 
-          <LinearGradient
-            colors={['#991b1b', '#7f1d1d']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="flex-1 p-4 rounded-2xl items-center"
+          <View
             style={{
-              shadowColor: '#ef4444',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
-              elevation: 4,
+              flex: 1,
+              padding: 16,
+              alignItems: 'center',
+              backgroundColor: 'rgba(239, 68, 68, 0.15)',
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: 'rgba(239, 68, 68, 0.2)',
             }}
           >
             <TrendingDown size={24} color="#f87171" />
-            <Text className="text-4xl font-bold text-white mt-2">{stats.losses}</Text>
-            <Text className="text-red-300/70 text-sm font-medium">Derrotas</Text>
-          </LinearGradient>
+            <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 8 }}>{stats.losses}</Text>
+            <Text style={{ color: '#f87171', fontSize: 14, fontWeight: '500' }}>Derrotas</Text>
+          </View>
         </Animated.View>
 
         {/* Filters */}
         <Animated.View
           entering={FadeInDown.duration(500).delay(200)}
-          className="px-5 pb-4"
+          style={{ paddingBottom: 16 }}
         >
           {/* Discipline Filter */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            className="mb-3"
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+            style={{ marginBottom: 12 }}
           >
             {disciplines.map((discipline, index) => (
               <AnimatedPressable
                 key={discipline.id}
                 entering={FadeIn.duration(300).delay(250 + index * 50)}
-                className="mr-2"
+                style={{ marginRight: 12 }}
                 onPress={() => setSelectedDiscipline(discipline.id)}
               >
-                <LinearGradient
-                  colors={
-                    selectedDiscipline === discipline.id
-                      ? [ClubColors.secondary, '#d4992e']
-                      : ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']
-                  }
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  className="px-4 py-2.5 rounded-full flex-row items-center"
+                <View
                   style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    backgroundColor: selectedDiscipline === discipline.id
+                      ? ClubColors.secondary
+                      : ClubColors.surface,
+                    borderRadius: 14,
                     borderWidth: 1,
                     borderColor: selectedDiscipline === discipline.id
-                      ? 'transparent'
-                      : 'rgba(255,255,255,0.1)',
+                      ? ClubColors.secondary
+                      : Glass.border,
                   }}
                 >
                   {discipline.emoji && (
-                    <Text className="mr-1.5 text-base">{discipline.emoji}</Text>
+                    <Text style={{ marginRight: 8, fontSize: 16 }}>{discipline.emoji}</Text>
                   )}
                   <Text
-                    className="font-semibold"
                     style={{
+                      fontWeight: '600',
                       color: selectedDiscipline === discipline.id
                         ? ClubColors.primary
-                        : 'rgba(255,255,255,0.8)',
+                        : 'white',
                     }}
                   >
                     {discipline.name}
                   </Text>
-                </LinearGradient>
+                </View>
               </AnimatedPressable>
             ))}
           </ScrollView>
 
           {/* Category Filter */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+          >
             {categories.map((category, index) => (
               <AnimatedPressable
                 key={category}
                 entering={FadeIn.duration(300).delay(300 + index * 30)}
-                className="mr-2"
+                style={{ marginRight: 8 }}
                 onPress={() => setSelectedCategory(category)}
               >
                 <View
-                  className="px-4 py-2 rounded-full"
                   style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
                     backgroundColor: selectedCategory === category
                       ? ClubColors.primary
                       : 'transparent',
+                    borderRadius: 12,
                     borderWidth: 1,
                     borderColor: selectedCategory === category
                       ? ClubColors.primary
-                      : 'rgba(255,255,255,0.15)',
+                      : Glass.border,
                   }}
                 >
                   <Text
-                    className="text-sm font-medium"
                     style={{
+                      fontSize: 14,
+                      fontWeight: '500',
                       color: selectedCategory === category
                         ? 'white'
-                        : 'rgba(255,255,255,0.5)',
+                        : ClubColors.muted,
                     }}
                   >
                     {category}
@@ -387,31 +389,33 @@ export default function ResultadosScreen() {
         </Animated.View>
 
         {/* Results List */}
-        <View className="px-5">
+        <View style={{ paddingHorizontal: 20 }}>
           {filteredResults.length === 0 ? (
             <Animated.View
               entering={FadeIn.duration(400)}
-              className="items-center py-16"
+              style={{ alignItems: 'center', paddingVertical: 64 }}
             >
               <View
-                className="w-20 h-20 rounded-full items-center justify-center mb-4"
-                style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 24,
+                  backgroundColor: ClubColors.surface,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16,
+                }}
               >
-                <Trophy size={40} color="rgba(255,255,255,0.2)" />
+                <Trophy size={36} color={ClubColors.muted} />
               </View>
-              <Text className="text-white/40 text-center text-base">
+              <Text style={{ color: ClubColors.muted, textAlign: 'center', fontSize: 16 }}>
                 No hay resultados{'\n'}con estos filtros
               </Text>
             </Animated.View>
           ) : (
             filteredResults.map((match, index) => {
               const result = getMatchResult(match);
-              const resultGradient = result === 'win'
-                ? ['#166534', '#14532d']
-                : result === 'draw'
-                ? ['#854d0e', '#713f12']
-                : ['#991b1b', '#7f1d1d'];
-              const borderColor = result === 'win'
+              const resultColor = result === 'win'
                 ? '#22c55e'
                 : result === 'draw'
                 ? '#eab308'
@@ -424,110 +428,142 @@ export default function ResultadosScreen() {
                   key={match.id}
                   entering={FadeInRight.duration(400).delay(400 + index * 100)}
                 >
-                  <Pressable className="mb-4">
-                    <LinearGradient
-                      colors={[ClubColors.primary, ClubColors.primaryDark]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      className="rounded-2xl overflow-hidden"
+                  <Pressable style={{ marginBottom: 16 }}>
+                    <View
                       style={{
+                        backgroundColor: ClubColors.surface,
+                        borderRadius: 24,
+                        borderWidth: 1,
+                        borderColor: Glass.border,
                         borderLeftWidth: 4,
-                        borderLeftColor: borderColor,
-                        shadowColor: ClubColors.primary,
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 8,
-                        elevation: 5,
+                        borderLeftColor: resultColor,
+                        overflow: 'hidden',
                       }}
                     >
-                      <View className="p-5">
+                      <View style={{ padding: 20 }}>
                         {/* Match Header */}
-                        <View className="flex-row justify-between items-start mb-4">
-                          <View className="flex-row items-center">
-                            <LinearGradient
-                              colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.05)']}
-                              className="w-11 h-11 rounded-xl items-center justify-center mr-3"
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <View
+                              style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 14,
+                                backgroundColor: 'rgba(255,255,255,0.08)',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 12,
+                              }}
                             >
-                              <Text className="text-xl">
+                              <Text style={{ fontSize: 20 }}>
                                 {getSportEmoji(match.squad?.discipline?.name || '')}
                               </Text>
-                            </LinearGradient>
+                            </View>
                             <View>
-                              <Text className="text-white font-bold text-base">
+                              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>
                                 {match.squad?.discipline?.name}
                               </Text>
-                              <Text className="text-white/50 text-xs">
+                              <Text style={{ color: ClubColors.muted, fontSize: 12, marginTop: 2 }}>
                                 {match.squad?.category}
                               </Text>
                             </View>
                           </View>
-                          <View className="flex-row items-center">
-                            <Calendar size={14} color="rgba(255,255,255,0.5)" />
-                            <Text className="text-white/50 text-sm ml-1.5">
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Calendar size={14} color={ClubColors.muted} />
+                            <Text style={{ color: ClubColors.muted, fontSize: 14, marginLeft: 6 }}>
                               {formatMatchDate(match.match_date)}
                             </Text>
                           </View>
                         </View>
 
                         {/* Score Section */}
-                        <View className="flex-row items-center justify-between">
-                          <View className="flex-row items-center flex-1">
-                            <LinearGradient
-                              colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.08)']}
-                              className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                            <View
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 20,
+                                backgroundColor: 'rgba(255,255,255,0.08)',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 12,
+                              }}
                             >
-                              <Text className="text-lg">{'\ud83d\udc3a'}</Text>
-                            </LinearGradient>
-                            <View className="flex-1">
-                              <Text className="text-white font-semibold text-sm" numberOfLines={1}>
+                              <Text style={{ fontSize: 18 }}>{'\ud83d\udc3a'}</Text>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }} numberOfLines={1}>
                                 Club Seminario
                               </Text>
                             </View>
                           </View>
 
-                          <LinearGradient
-                            colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.08)']}
-                            className="px-5 py-2.5 rounded-xl mx-4"
+                          <View
+                            style={{
+                              paddingHorizontal: 20,
+                              paddingVertical: 10,
+                              marginHorizontal: 16,
+                              backgroundColor: 'rgba(255,255,255,0.08)',
+                              borderRadius: 14,
+                            }}
                           >
-                            <Text className="text-white text-2xl font-bold">
+                            <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>
                               {clubScore} - {opponentScore}
                             </Text>
-                          </LinearGradient>
+                          </View>
 
-                          <View className="flex-row items-center flex-1 justify-end">
-                            <View className="flex-1 items-end mr-3">
-                              <Text className="text-white font-semibold text-sm text-right" numberOfLines={1}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
+                            <View style={{ flex: 1, alignItems: 'flex-end', marginRight: 12 }}>
+                              <Text style={{ color: 'white', fontWeight: '600', fontSize: 14, textAlign: 'right' }} numberOfLines={1}>
                                 {match.opponent_name}
                               </Text>
                             </View>
-                            <LinearGradient
-                              colors={resultGradient as [string, string]}
-                              className="w-10 h-10 rounded-full items-center justify-center"
+                            <View
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 20,
+                                backgroundColor: `${resultColor}30`,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
                             >
-                              <Trophy size={18} color="white" />
-                            </LinearGradient>
+                              <Trophy size={18} color={resultColor} />
+                            </View>
                           </View>
                         </View>
 
                         {/* League and Location */}
                         <View
-                          className="flex-row justify-between items-center mt-4 pt-4"
-                          style={{ borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginTop: 16,
+                            paddingTop: 16,
+                            borderTopWidth: 1,
+                            borderTopColor: Glass.border,
+                          }}
                         >
-                          <Text className="text-white/40 text-xs font-medium">
+                          <Text style={{ color: ClubColors.muted, fontSize: 12, fontWeight: '500' }}>
                             {match.league}
                           </Text>
                           <View
-                            className="px-3 py-1 rounded-full"
-                            style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                            style={{
+                              paddingHorizontal: 12,
+                              paddingVertical: 4,
+                              backgroundColor: 'rgba(255,255,255,0.08)',
+                              borderRadius: 10,
+                            }}
                           >
-                            <Text className="text-white/60 text-xs font-medium">
+                            <Text style={{ color: ClubColors.muted, fontSize: 12, fontWeight: '500' }}>
                               {match.is_home ? 'Local' : 'Visita'}
                             </Text>
                           </View>
                         </View>
                       </View>
-                    </LinearGradient>
+                    </View>
                   </Pressable>
                 </Animated.View>
               );

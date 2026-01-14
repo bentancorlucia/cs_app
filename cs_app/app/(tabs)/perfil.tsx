@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Settings, Trophy, Clock, Target, Users, Calendar } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated';
 import { useAuth } from '@/src/context/AuthContext';
-import { ClubColors } from '@/constants/theme';
+import { ClubColors, Glass } from '@/constants/theme';
 
 // Mock profile data
 const mockProfile = {
@@ -36,269 +36,324 @@ export default function PerfilScreen() {
     socio_social: 'Socio Social',
     socio_deportivo: 'Socio Deportivo',
     no_socio: 'No Socio',
-    dt: 'Director Tecnico',
+    dt: 'Director Técnico',
     delegado: 'Delegado',
     admin: 'Administrador',
   };
 
   return (
-    <View className="flex-1" style={{ backgroundColor: '#0d0d0d' }}>
-      {/* Header with Gradient */}
-      <LinearGradient
-        colors={[ClubColors.primary, ClubColors.primaryDark, '#1a0a10']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        className="px-5 pt-14 pb-6"
-      >
-        <Animated.View
-          entering={FadeInDown.duration(500)}
-          className="flex-row justify-between items-center"
-        >
-          <Text className="text-white text-3xl font-bold">Mi Perfil</Text>
-          <AnimatedPressable
-            entering={FadeIn.duration(400).delay(200)}
-            className="w-11 h-11 rounded-full items-center justify-center"
-            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-          >
-            <Settings size={20} color="white" />
-          </AnimatedPressable>
-        </Animated.View>
-      </LinearGradient>
-
+    <View style={{ flex: 1, backgroundColor: ClubColors.background }}>
       <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        bounces={true}
       >
+        {/* Header with Gradient */}
+        <LinearGradient
+          colors={[ClubColors.primary, ClubColors.primaryDark, ClubColors.background]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 24 }}
+        >
+          <Animated.View
+            entering={FadeInDown.duration(500)}
+            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+          >
+            <Text style={{ color: 'white', fontSize: 30, fontWeight: 'bold' }}>Mi Perfil</Text>
+            <AnimatedPressable
+              entering={FadeIn.duration(400).delay(200)}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 14,
+                backgroundColor: 'rgba(255,255,255,0.12)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Settings size={20} color="white" />
+            </AnimatedPressable>
+          </Animated.View>
+        </LinearGradient>
+
         {/* Profile Card */}
         <Animated.View
           entering={FadeInUp.duration(500).delay(100)}
-          className="px-5 py-5"
+          style={{ paddingHorizontal: 20, paddingVertical: 20 }}
         >
-          <LinearGradient
-            colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.03)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="p-5 rounded-2xl"
-            style={{ borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+          <View
+            style={{
+              padding: 20,
+              backgroundColor: ClubColors.surface,
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: Glass.border,
+            }}
           >
-            <View className="flex-row items-center">
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <View
-                className="w-24 h-24 rounded-full overflow-hidden mr-4"
                 style={{
-                  borderWidth: 3,
+                  width: 88,
+                  height: 88,
+                  borderRadius: 44,
+                  borderWidth: 2,
                   borderColor: ClubColors.secondary,
-                  shadowColor: ClubColors.secondary,
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.4,
-                  shadowRadius: 12,
-                  elevation: 8,
+                  overflow: 'hidden',
+                  marginRight: 16,
                 }}
               >
                 <Image
                   source={{ uri: mockProfile.avatar }}
-                  className="w-full h-full"
+                  style={{ width: '100%', height: '100%' }}
                 />
               </View>
-              <View className="flex-1">
-                <Text className="text-white text-2xl font-bold">
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>
                   {profile?.full_name ?? mockProfile.name}
                 </Text>
-                <Text className="text-white/50 text-sm mt-0.5">
+                <Text style={{ color: ClubColors.muted, fontSize: 14, marginTop: 2 }}>
                   {profile?.email ?? mockProfile.email}
                 </Text>
-                <LinearGradient
-                  colors={[ClubColors.secondary, '#d4992e']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  className="px-4 py-1.5 rounded-full mt-3 self-start"
+                <View
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 6,
+                    marginTop: 12,
+                    alignSelf: 'flex-start',
+                    backgroundColor: ClubColors.secondary,
+                    borderRadius: 12,
+                  }}
                 >
                   <Text
-                    className="text-xs font-bold uppercase tracking-wide"
-                    style={{ color: ClubColors.primary }}
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5,
+                      color: ClubColors.primary,
+                    }}
                   >
                     {roleLabels[userRole ?? 'socio_deportivo'] ?? 'Socio Deportivo'}
                   </Text>
-                </LinearGradient>
+                </View>
               </View>
             </View>
 
             <View
-              className="flex-row items-center mt-5 pt-5"
-              style={{ borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginTop: 20,
+                paddingTop: 20,
+                borderTopWidth: 1,
+                borderTopColor: Glass.border,
+              }}
             >
-              <Calendar size={16} color="rgba(255,255,255,0.4)" />
-              <Text className="text-white/40 text-sm ml-2">
+              <Calendar size={16} color={ClubColors.muted} />
+              <Text style={{ color: ClubColors.muted, fontSize: 14, marginLeft: 8 }}>
                 Socio desde {mockProfile.memberSince}
               </Text>
             </View>
-          </LinearGradient>
+          </View>
         </Animated.View>
 
         {/* Sport Info Card */}
         <Animated.View
           entering={FadeInUp.duration(500).delay(200)}
-          className="px-5"
+          style={{ paddingHorizontal: 20 }}
         >
-          <LinearGradient
-            colors={[ClubColors.primary, ClubColors.primaryDark]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="p-5 rounded-2xl"
+          <View
             style={{
-              shadowColor: ClubColors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 5,
+              padding: 20,
+              backgroundColor: ClubColors.surface,
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: Glass.border,
             }}
           >
-            <View className="flex-row justify-between items-start">
-              <View className="flex-row items-center">
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.05)']}
-                  className="w-12 h-12 rounded-xl items-center justify-center mr-3"
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 14,
+                    backgroundColor: 'rgba(255,255,255,0.08)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 12,
+                  }}
                 >
-                  <Text className="text-2xl">{'\u26bd'}</Text>
-                </LinearGradient>
+                  <Text style={{ fontSize: 24 }}>{'\u26bd'}</Text>
+                </View>
                 <View>
-                  <Text style={{ color: ClubColors.secondary }} className="font-bold text-xl">
+                  <Text style={{ color: ClubColors.secondary, fontWeight: 'bold', fontSize: 20 }}>
                     {mockProfile.sport}
                   </Text>
-                  <Text className="text-white/50 text-sm">
+                  <Text style={{ color: ClubColors.muted, fontSize: 14, marginTop: 2 }}>
                     {mockProfile.division}
                   </Text>
                 </View>
               </View>
-              <LinearGradient
-                colors={[ClubColors.secondary, '#d4992e']}
-                className="px-4 py-3 rounded-xl"
+              <View
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  backgroundColor: ClubColors.secondary,
+                  borderRadius: 14,
+                }}
               >
                 <Text
-                  className="text-3xl font-bold"
-                  style={{ color: ClubColors.primary }}
+                  style={{
+                    fontSize: 30,
+                    fontWeight: 'bold',
+                    color: ClubColors.primary,
+                  }}
                 >
                   #{mockProfile.jerseyNumber}
                 </Text>
-              </LinearGradient>
+              </View>
             </View>
 
             <View
-              className="flex-row mt-5 pt-5"
-              style={{ gap: 32, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}
+              style={{
+                flexDirection: 'row',
+                marginTop: 20,
+                paddingTop: 20,
+                gap: 32,
+                borderTopWidth: 1,
+                borderTopColor: Glass.border,
+              }}
             >
               <View>
-                <Text className="text-white/40 text-xs uppercase tracking-wide">Categoria</Text>
-                <Text className="text-white font-semibold text-base mt-1">{mockProfile.category}</Text>
+                <Text style={{ color: ClubColors.muted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Categoría
+                </Text>
+                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16, marginTop: 4 }}>{mockProfile.category}</Text>
               </View>
               <View>
-                <Text className="text-white/40 text-xs uppercase tracking-wide">Posicion</Text>
-                <Text className="text-white font-semibold text-base mt-1">{mockProfile.position}</Text>
+                <Text style={{ color: ClubColors.muted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Posición
+                </Text>
+                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16, marginTop: 4 }}>{mockProfile.position}</Text>
               </View>
             </View>
-          </LinearGradient>
+          </View>
         </Animated.View>
 
         {/* Stats Section */}
         <Animated.View
           entering={FadeInUp.duration(500).delay(300)}
-          className="px-5 mt-6"
+          style={{ paddingHorizontal: 20, marginTop: 24 }}
         >
-          <Text className="text-white text-xl font-bold mb-4">Mis Estadisticas</Text>
-          <View className="flex-row" style={{ gap: 12 }}>
-            <LinearGradient
-              colors={['#5c3d1e', '#4a3118']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="flex-1 p-5 rounded-2xl"
+          <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Mis Estadísticas</Text>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <View
               style={{
-                shadowColor: ClubColors.secondary,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.15,
-                shadowRadius: 8,
-                elevation: 4,
+                flex: 1,
+                padding: 20,
+                backgroundColor: 'rgba(247, 182, 67, 0.12)',
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: 'rgba(247, 182, 67, 0.2)',
               }}
             >
-              <LinearGradient
-                colors={['rgba(247,182,67,0.3)', 'rgba(247,182,67,0.1)']}
-                className="w-11 h-11 rounded-xl items-center justify-center"
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  backgroundColor: 'rgba(247, 182, 67, 0.2)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <Target size={22} color={ClubColors.secondary} />
-              </LinearGradient>
-              <Text className="text-4xl font-bold text-white mt-3">{mockStats.goals}</Text>
-              <Text className="text-white/50 text-sm font-medium">Goles</Text>
-            </LinearGradient>
+              </View>
+              <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 12 }}>{mockStats.goals}</Text>
+              <Text style={{ color: ClubColors.muted, fontSize: 14, fontWeight: '500' }}>Goles</Text>
+            </View>
 
-            <LinearGradient
-              colors={['#1e3a2f', '#163028']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="flex-1 p-5 rounded-2xl"
+            <View
               style={{
-                shadowColor: '#22c55e',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.15,
-                shadowRadius: 8,
-                elevation: 4,
+                flex: 1,
+                padding: 20,
+                backgroundColor: 'rgba(34, 197, 94, 0.12)',
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: 'rgba(34, 197, 94, 0.2)',
               }}
             >
-              <LinearGradient
-                colors={['rgba(34,197,94,0.3)', 'rgba(34,197,94,0.1)']}
-                className="w-11 h-11 rounded-xl items-center justify-center"
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <Users size={22} color="#22c55e" />
-              </LinearGradient>
-              <Text className="text-4xl font-bold text-white mt-3">{mockStats.assists}</Text>
-              <Text className="text-white/50 text-sm font-medium">Asistencias</Text>
-            </LinearGradient>
+              </View>
+              <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 12 }}>{mockStats.assists}</Text>
+              <Text style={{ color: ClubColors.muted, fontSize: 14, fontWeight: '500' }}>Asistencias</Text>
+            </View>
           </View>
 
-          <View className="flex-row mt-3" style={{ gap: 12 }}>
-            <LinearGradient
-              colors={[ClubColors.primary, ClubColors.primaryDark]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="flex-1 p-5 rounded-2xl"
+          <View style={{ flexDirection: 'row', marginTop: 12, gap: 12 }}>
+            <View
               style={{
-                shadowColor: ClubColors.primary,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 4,
+                flex: 1,
+                padding: 20,
+                backgroundColor: 'rgba(115, 13, 50, 0.3)',
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: 'rgba(115, 13, 50, 0.4)',
               }}
             >
-              <LinearGradient
-                colors={['rgba(247,182,67,0.3)', 'rgba(247,182,67,0.1)']}
-                className="w-11 h-11 rounded-xl items-center justify-center"
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  backgroundColor: 'rgba(247, 182, 67, 0.2)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <Trophy size={22} color={ClubColors.secondary} />
-              </LinearGradient>
-              <Text className="text-4xl font-bold text-white mt-3">{mockStats.trophies}</Text>
-              <Text className="text-white/50 text-sm font-medium">Torneos</Text>
-            </LinearGradient>
+              </View>
+              <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 12 }}>{mockStats.trophies}</Text>
+              <Text style={{ color: ClubColors.muted, fontSize: 14, fontWeight: '500' }}>Torneos</Text>
+            </View>
 
-            <LinearGradient
-              colors={['#1e3a5c', '#163050']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="flex-1 p-5 rounded-2xl"
+            <View
               style={{
-                shadowColor: '#3b82f6',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.15,
-                shadowRadius: 8,
-                elevation: 4,
+                flex: 1,
+                padding: 20,
+                backgroundColor: 'rgba(59, 130, 246, 0.12)',
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: 'rgba(59, 130, 246, 0.2)',
               }}
             >
-              <LinearGradient
-                colors={['rgba(59,130,246,0.3)', 'rgba(59,130,246,0.1)']}
-                className="w-11 h-11 rounded-xl items-center justify-center"
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <Clock size={22} color="#3b82f6" />
-              </LinearGradient>
-              <Text className="text-4xl font-bold text-white mt-3">{mockStats.attendance}%</Text>
-              <Text className="text-white/50 text-sm font-medium">Asistencia</Text>
-            </LinearGradient>
+              </View>
+              <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 12 }}>{mockStats.attendance}%</Text>
+              <Text style={{ color: ClubColors.muted, fontSize: 14, fontWeight: '500' }}>Asistencia</Text>
+            </View>
           </View>
         </Animated.View>
       </ScrollView>

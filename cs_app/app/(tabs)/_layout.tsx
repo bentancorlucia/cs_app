@@ -4,12 +4,10 @@ import { View, ActivityIndicator } from 'react-native';
 import { Home, Calendar, Trophy, User } from 'lucide-react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { Colors, ClubColors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ClubColors } from '@/constants/theme';
 import { useAuth } from '@/src/context/AuthContext';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const { isLoading } = useAuth();
 
   // Show loading spinner while auth is initializing
@@ -25,7 +23,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: ClubColors.secondary,
-        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
+        tabBarInactiveTintColor: '#ffffff',
         headerShown: true,
         headerStyle: {
           backgroundColor: ClubColors.primary,

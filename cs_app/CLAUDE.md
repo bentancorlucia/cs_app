@@ -1,10 +1,13 @@
 # Club Seminario App - Project Guidelines
 
-## Visual Identity
-- **Primary Color (Maroon):** `#730d32`
-- **Secondary Color (Yellow/Gold):** `#f7b643`
-- **Aesthetic:** Institutional, modern, clean, mobile-first.
-- **UI Language:** Always use **Spanish (Uruguay)** for user-facing text.
+## Code Style & Architecture
+- Adhere strictly to **Clean Architecture** principles.
+
+## UI & Aesthetics Rules
+- **CRITICAL:** Review `./docs/design-system.md` before generating UI.
+- **Tone:** Use **Spanish (Uruguay)** for all UI text.
+- **Motion:** Everything must have **smooth transitions**. No abrupt state changes.
+- **Styling:** Follow the Maroon (#730d32) and Gold (#f7b643) color scheme strictly.
 
 ## Tech Stack
 - **Framework:** React Native (Expo)

@@ -7,6 +7,7 @@ import {
   Image,
   useWindowDimensions,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Calendar,
@@ -22,8 +23,11 @@ import Animated, {
   FadeInRight,
   FadeInUp,
 } from 'react-native-reanimated';
-import { ClubColors } from '@/constants/theme';
+import { ClubColors, Glass } from '@/constants/theme';
 import { Match } from '@/src/types/database';
+
+// Club logo
+const clubLogo = require('@/assets/images/logo-cs.png');
 
 // Mock user data
 const mockUser = {
@@ -134,18 +138,19 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
 
   return (
-    <View className="flex-1" style={{ backgroundColor: '#0d0d0d' }}>
+    <View style={{ flex: 1, backgroundColor: ClubColors.background }}>
       <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        bounces={true}
       >
         {/* Header with Gradient */}
         <LinearGradient
-          colors={[ClubColors.primary, ClubColors.primaryDark, '#1a0a10']}
+          colors={[ClubColors.primary, ClubColors.primaryDark, ClubColors.background]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          className="px-5 pt-14 pb-8"
+          style={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 40 }}
         >
           {/* Welcome and Avatar */}
           <Animated.View
@@ -153,22 +158,19 @@ export default function HomeScreen() {
             className="flex-row justify-between items-start"
           >
             <View>
-              <Text className="text-white/60 text-base font-medium">Bienvenido,</Text>
+              <Text style={{ color: ClubColors.muted }} className="text-base font-medium">
+                Bienvenido,
+              </Text>
               <Text className="text-white text-4xl font-bold tracking-tight">
                 {mockUser.name}
               </Text>
             </View>
             <Pressable>
               <View
-                className="w-16 h-16 rounded-full overflow-hidden"
+                className="w-14 h-14 rounded-full overflow-hidden"
                 style={{
-                  borderWidth: 3,
+                  borderWidth: 2,
                   borderColor: ClubColors.secondary,
-                  shadowColor: ClubColors.secondary,
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.5,
-                  shadowRadius: 10,
-                  elevation: 8,
                 }}
               >
                 <Image
@@ -179,150 +181,147 @@ export default function HomeScreen() {
             </Pressable>
           </Animated.View>
 
-          {/* Club Info Card */}
+          {/* Club Info Card - Glassmorphism */}
           <Animated.View
             entering={FadeInDown.duration(600).delay(200)}
             className="mt-6"
           >
-            <LinearGradient
-              colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.05)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="p-4 rounded-2xl flex-row items-center"
-              style={{
-                borderWidth: 1,
-                borderColor: 'rgba(247,182,67,0.3)',
-              }}
+            <BlurView
+              intensity={20}
+              tint="dark"
+              className="overflow-hidden"
+              style={{ borderRadius: 24 }}
             >
-              <LinearGradient
-                colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.08)']}
-                className="w-18 h-18 rounded-xl items-center justify-center mr-4"
-                style={{ width: 72, height: 72 }}
+              <View
+                className="p-5 flex-row items-center"
+                style={{
+                  backgroundColor: Glass.card,
+                  borderWidth: 1,
+                  borderColor: Glass.border,
+                  borderRadius: 24,
+                }}
               >
-                <Text className="text-5xl">{'\ud83d\udc3a'}</Text>
-              </LinearGradient>
-              <View className="flex-1">
-                <Text
-                  className="text-2xl font-bold"
-                  style={{ color: ClubColors.secondary }}
-                >
-                  {mockClub.name}
-                </Text>
-                <Text className="text-white/70 text-sm mt-0.5">
-                  Desde {mockClub.since} · {mockClub.location}
-                </Text>
                 <View
-                  className="mt-2 px-3 py-1 rounded-full self-start"
-                  style={{ backgroundColor: 'rgba(247,182,67,0.2)' }}
+                  className="items-center justify-center mr-4"
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 16,
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                  }}
                 >
+                  <Image
+                    source={clubLogo}
+                    style={{ width: 48, height: 48 }}
+                    resizeMode="contain"
+                  />
+                </View>
+                <View className="flex-1">
                   <Text
-                    className="text-xs font-semibold"
+                    className="text-xl font-bold"
                     style={{ color: ClubColors.secondary }}
                   >
-                    {mockClub.memberType}
+                    {mockClub.name}
                   </Text>
+                  <Text style={{ color: ClubColors.muted }} className="text-sm mt-1">
+                    Desde {mockClub.since} · {mockClub.location}
+                  </Text>
+                  <View
+                    className="mt-3 px-3 py-1.5 self-start"
+                    style={{
+                      backgroundColor: 'rgba(247,182,67,0.15)',
+                      borderRadius: 12,
+                    }}
+                  >
+                    <Text
+                      className="text-xs font-semibold"
+                      style={{ color: ClubColors.secondary }}
+                    >
+                      {mockClub.memberType}
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </LinearGradient>
+            </BlurView>
           </Animated.View>
         </LinearGradient>
 
         {/* Quick Actions */}
         <Animated.View
           entering={FadeInUp.duration(500).delay(300)}
-          className="px-5 py-5 flex-row"
-          style={{ gap: 12 }}
+          style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, flexDirection: 'row', gap: 16 }}
         >
           <AnimatedPressable
-            className="flex-1 rounded-2xl overflow-hidden"
-            style={{ minHeight: 130 }}
+            className="flex-1 overflow-hidden"
+            style={{ minHeight: 190, borderRadius: 28 }}
             onPress={() => router.push('/(tabs)/a-la-cancha' as never)}
           >
             <LinearGradient
               colors={[ClubColors.primary, ClubColors.primaryDark]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              className="flex-1 p-4 justify-between"
+              className="flex-1 p-5 justify-between"
+              style={{ borderRadius: 28 }}
             >
               <View
-                className="w-12 h-12 rounded-xl items-center justify-center"
-                style={{ backgroundColor: 'rgba(247,182,67,0.2)' }}
+                className="w-14 h-14 items-center justify-center"
+                style={{ backgroundColor: 'rgba(247,182,67,0.2)', borderRadius: 16 }}
               >
-                <Calendar size={24} color={ClubColors.secondary} />
+                <Calendar size={28} color={ClubColors.secondary} />
               </View>
               <View>
-                <Text className="text-white font-bold text-base">A la</Text>
-                <Text className="text-white font-bold text-base -mt-1">Cancha</Text>
-                <Text className="text-white/50 text-xs mt-1">Proximos partidos</Text>
+                <Text className="text-white font-bold text-xl">A la</Text>
+                <Text className="text-white font-bold text-xl -mt-1">Cancha</Text>
+                <Text style={{ color: 'rgba(255,255,255,0.6)' }} className="text-sm mt-2">
+                  Próximos partidos
+                </Text>
               </View>
             </LinearGradient>
           </AnimatedPressable>
 
           <AnimatedPressable
-            className="flex-1 rounded-2xl overflow-hidden"
-            style={{ minHeight: 130 }}
-            onPress={() => router.push('/(tabs)/resultados')}
-          >
-            <LinearGradient
-              colors={[ClubColors.primary, ClubColors.primaryDark]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="flex-1 p-4 justify-between"
-            >
-              <View
-                className="w-12 h-12 rounded-xl items-center justify-center"
-                style={{ backgroundColor: 'rgba(247,182,67,0.2)' }}
-              >
-                <Trophy size={24} color={ClubColors.secondary} />
-              </View>
-              <View>
-                <Text className="text-white font-bold text-base">Resultad</Text>
-                <Text className="text-white font-bold text-base -mt-1">os</Text>
-                <Text className="text-white/50 text-xs mt-1">Historial</Text>
-              </View>
-            </LinearGradient>
-          </AnimatedPressable>
-
-          <AnimatedPressable
-            className="flex-1 rounded-2xl overflow-hidden"
-            style={{ minHeight: 130 }}
+            className="flex-1 overflow-hidden"
+            style={{ minHeight: 180, borderRadius: 28 }}
             onPress={() => router.push('/(tabs)/mi-equipo' as never)}
           >
-            <LinearGradient
-              colors={['#252525', '#1a1a1a']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="flex-1 p-4 justify-between"
-              style={{ borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+            <View
+              className="flex-1 p-5 justify-between"
+              style={{
+                backgroundColor: ClubColors.surface,
+                borderRadius: 28,
+                borderWidth: 1,
+                borderColor: Glass.border,
+              }}
             >
               <View
-                className="w-12 h-12 rounded-xl items-center justify-center"
-                style={{ backgroundColor: 'rgba(247,182,67,0.15)' }}
+                className="w-14 h-14 items-center justify-center"
+                style={{ backgroundColor: 'rgba(247,182,67,0.15)', borderRadius: 16 }}
               >
-                <Users size={24} color={ClubColors.secondary} />
+                <Users size={28} color={ClubColors.secondary} />
               </View>
               <View>
-                <Text className="text-white font-bold text-base">Mi</Text>
-                <Text className="text-white font-bold text-base -mt-1">Equipo</Text>
-                <Text className="text-white/50 text-xs mt-1">Companeros</Text>
+                <Text className="text-white font-bold text-xl">Mi</Text>
+                <Text className="text-white font-bold text-xl -mt-1">Equipo</Text>
+                <Text style={{ color: ClubColors.muted }} className="text-sm mt-2">
+                  Compañeros
+                </Text>
               </View>
-            </LinearGradient>
+            </View>
           </AnimatedPressable>
         </Animated.View>
 
         {/* Upcoming Matches Section */}
         <Animated.View
           entering={FadeInUp.duration(500).delay(400)}
-          className="px-5 mt-2"
+          style={{ paddingHorizontal: 20, marginTop: 16 }}
         >
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-white text-xl font-bold">Proximos Partidos</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>Próximos Partidos</Text>
             <Pressable
-              className="flex-row items-center px-3 py-1.5 rounded-full"
-              style={{ backgroundColor: 'rgba(247,182,67,0.15)' }}
+              style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(247,182,67,0.12)', borderRadius: 12 }}
               onPress={() => router.push('/(tabs)/a-la-cancha' as never)}
             >
-              <Text style={{ color: ClubColors.secondary }} className="text-sm font-medium mr-1">
+              <Text style={{ color: ClubColors.secondary, fontSize: 14, fontWeight: '500', marginRight: 4 }}>
                 Ver todos
               </Text>
               <ChevronRight size={14} color={ClubColors.secondary} />
@@ -334,25 +333,26 @@ export default function HomeScreen() {
               key={match.id}
               entering={FadeInRight.duration(400).delay(500 + index * 100)}
             >
-              <Pressable className="mb-3">
-                <LinearGradient
-                  colors={[ClubColors.primary, ClubColors.primaryDark]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  className="p-4 rounded-2xl"
+              <Pressable style={{ marginBottom: 16 }}>
+                <View
+                  className="p-5"
                   style={{
-                    shadowColor: ClubColors.primary,
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    elevation: 5,
+                    backgroundColor: ClubColors.surface,
+                    borderRadius: 24,
+                    borderWidth: 1,
+                    borderColor: Glass.border,
                   }}
                 >
                   <View className="flex-row justify-between items-start">
                     <View className="flex-row items-center">
                       <View
-                        className="w-10 h-10 rounded-xl items-center justify-center mr-3"
-                        style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                        className="items-center justify-center mr-3"
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 14,
+                          backgroundColor: 'rgba(255,255,255,0.08)',
+                        }}
                       >
                         <Text className="text-2xl">
                           {getSportEmoji(match.squad?.discipline?.name || '')}
@@ -362,47 +362,59 @@ export default function HomeScreen() {
                         <Text className="text-white font-bold text-base">
                           {match.squad?.discipline?.name}
                         </Text>
-                        <Text className="text-white/50 text-xs">{match.squad?.category}</Text>
+                        <Text style={{ color: ClubColors.muted }} className="text-xs">
+                          {match.squad?.category}
+                        </Text>
                       </View>
                     </View>
-                    <LinearGradient
-                      colors={match.is_home ? ['#3b82f6', '#1d4ed8'] : ['#6b7280', '#4b5563']}
-                      className="px-3 py-1.5 rounded-full"
+                    <View
+                      className="px-3 py-1.5"
+                      style={{
+                        backgroundColor: match.is_home ? 'rgba(59,130,246,0.2)' : 'rgba(107,114,128,0.2)',
+                        borderRadius: 12,
+                      }}
                     >
-                      <Text className="text-white text-xs font-bold">
+                      <Text
+                        className="text-xs font-bold"
+                        style={{ color: match.is_home ? '#60a5fa' : '#9ca3af' }}
+                      >
                         {match.is_home ? 'LOCAL' : 'VISITA'}
                       </Text>
-                    </LinearGradient>
+                    </View>
                   </View>
 
                   <View className="mt-4">
                     <Text className="text-white font-semibold text-base">{mockClub.name}</Text>
-                    <Text style={{ color: ClubColors.secondary }} className="font-bold text-sm my-0.5">
+                    <Text style={{ color: ClubColors.secondary }} className="font-bold text-sm my-1">
                       vs
                     </Text>
                     <Text className="text-white font-semibold text-base">{match.opponent_name}</Text>
                   </View>
 
                   <View
-                    className="flex-row mt-4 pt-3 flex-wrap"
-                    style={{ gap: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}
+                    className="flex-row mt-4 pt-4 flex-wrap"
+                    style={{ gap: 16, borderTopWidth: 1, borderTopColor: Glass.border }}
                   >
                     <View className="flex-row items-center">
-                      <Calendar size={14} color="rgba(255,255,255,0.5)" />
-                      <Text className="text-white/50 text-sm ml-2">
+                      <Calendar size={14} color={ClubColors.muted} />
+                      <Text style={{ color: ClubColors.muted }} className="text-sm ml-2">
                         {formatMatchDate(match.match_date)}
                       </Text>
                     </View>
                     <View className="flex-row items-center">
-                      <Clock size={14} color="rgba(255,255,255,0.5)" />
-                      <Text className="text-white/50 text-sm ml-2">{match.match_time}</Text>
+                      <Clock size={14} color={ClubColors.muted} />
+                      <Text style={{ color: ClubColors.muted }} className="text-sm ml-2">
+                        {match.match_time}
+                      </Text>
                     </View>
                     <View className="flex-row items-center">
-                      <MapPin size={14} color="rgba(255,255,255,0.5)" />
-                      <Text className="text-white/50 text-sm ml-2">{match.location}</Text>
+                      <MapPin size={14} color={ClubColors.muted} />
+                      <Text style={{ color: ClubColors.muted }} className="text-sm ml-2">
+                        {match.location}
+                      </Text>
                     </View>
                   </View>
-                </LinearGradient>
+                </View>
               </Pressable>
             </Animated.View>
           ))}
@@ -411,20 +423,16 @@ export default function HomeScreen() {
         {/* Stats Section */}
         <Animated.View
           entering={FadeInUp.duration(500).delay(600)}
-          className="px-5 mt-6"
+          style={{ paddingHorizontal: 20, marginTop: 24 }}
         >
-          <Text className="text-white text-xl font-bold mb-4">Mis Estadisticas</Text>
-          <LinearGradient
-            colors={[ClubColors.primary, ClubColors.primaryDark]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="p-5 rounded-2xl"
+          <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Mis Estadísticas</Text>
+          <View
+            className="p-5"
             style={{
-              shadowColor: ClubColors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 5,
+              backgroundColor: ClubColors.surface,
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: Glass.border,
             }}
           >
             <View className="flex-row justify-between">
@@ -441,19 +449,21 @@ export default function HomeScreen() {
                   >
                     {stat.value}
                   </Text>
-                  <Text className="text-white/50 text-xs mt-1">{stat.label}</Text>
+                  <Text style={{ color: ClubColors.muted }} className="text-xs mt-1">
+                    {stat.label}
+                  </Text>
                 </View>
               ))}
             </View>
-          </LinearGradient>
+          </View>
         </Animated.View>
 
         {/* Sports Grid */}
         <Animated.View
           entering={FadeInUp.duration(500).delay(700)}
-          className="px-5 mt-8"
+          style={{ paddingHorizontal: 20, marginTop: 32, marginBottom: 16 }}
         >
-          <Text className="text-white text-xl font-bold mb-4">Nuestros Deportes</Text>
+          <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Nuestros Deportes</Text>
           <View className="flex-row flex-wrap" style={{ gap: 12 }}>
             {mockDisciplines.map((discipline, index) => (
               <Animated.View
@@ -462,22 +472,21 @@ export default function HomeScreen() {
                 style={{ width: (width - 40 - 24) / 3 }}
               >
                 <Pressable>
-                  <LinearGradient
-                    colors={['#252525', '#1a1a1a']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    className="rounded-2xl items-center justify-center py-5"
+                  <View
+                    className="items-center justify-center py-5"
                     style={{
+                      backgroundColor: ClubColors.surface,
+                      borderRadius: 24,
                       borderWidth: 1,
-                      borderColor: 'rgba(255,255,255,0.08)',
+                      borderColor: Glass.border,
                       aspectRatio: 1,
                     }}
                   >
                     <Text className="text-4xl mb-2">{discipline.emoji}</Text>
-                    <Text className="text-white/80 text-sm text-center font-medium">
+                    <Text style={{ color: ClubColors.muted }} className="text-sm text-center font-medium">
                       {discipline.name}
                     </Text>
-                  </LinearGradient>
+                  </View>
                 </Pressable>
               </Animated.View>
             ))}

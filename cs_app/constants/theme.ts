@@ -4,17 +4,30 @@
 
 import { Platform } from 'react-native';
 
-// Club Seminario Brand Colors
+// Club Seminario Brand Colors - Following Design System
 export const ClubColors = {
-  primary: '#730d32',      // Maroon
-  secondary: '#f7b643',    // Yellow/Gold
-  background: '#f8f9fa',   // Light gray background
+  primary: '#730D32',      // Maroon - headers, primary cards, branding
+  secondary: '#F7B643',    // Gold - highlights, active states
+
+  // Backgrounds (Design System)
+  background: '#000000',   // Pure black main background
+  surface: '#1A1A1A',      // Dark grey for content cards
+  surfaceElevated: '#252525', // Slightly lighter for elevated surfaces
+
+  // Primary variations
   primaryLight: '#8b1a42',
   primaryDark: '#5a0a27',
   secondaryLight: '#f9c76a',
   secondaryDark: '#d4992e',
+
+  // Base colors
   white: '#ffffff',
   black: '#000000',
+
+  // Muted text color (Design System)
+  muted: '#9CA3AF',
+
+  // Grayscale
   gray: {
     50: '#f8f9fa',
     100: '#f1f3f5',
@@ -27,10 +40,23 @@ export const ClubColors = {
     800: '#343a40',
     900: '#212529',
   },
-  success: '#28a745',
+
+  // Semantic colors
+  success: '#22c55e',
   warning: '#ffc107',
-  error: '#dc3545',
-  info: '#17a2b8',
+  error: '#ef4444',
+  info: '#3b82f6',
+};
+
+// Glass/Transparency values (Design System)
+export const Glass = {
+  card: 'rgba(26, 26, 26, 0.7)',      // 70% opacity dark cards
+  cardLight: 'rgba(26, 26, 26, 0.5)', // 50% opacity
+  border: 'rgba(255, 255, 255, 0.1)', // 10% white border
+  borderLight: 'rgba(255, 255, 255, 0.05)',
+  hover: 'rgba(255, 255, 255, 0.05)', // Hover state
+  overlay: 'rgba(0, 0, 0, 0.2)',      // Dark overlay for depth
+  blur: 16,                           // Standard blur value
 };
 
 export const Colors = {
