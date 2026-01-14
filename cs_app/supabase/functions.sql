@@ -243,7 +243,7 @@ RETURNS TABLE (
   discipline_name TEXT,
   discipline_icon TEXT,
   jersey_number INTEGER,
-  position TEXT,
+  "position" TEXT,
   is_coach BOOLEAN,
   is_delegate BOOLEAN
 ) AS $$
@@ -298,7 +298,7 @@ RETURNS TABLE (
   full_name TEXT,
   avatar_url TEXT,
   jersey_number INTEGER,
-  position TEXT,
+  "position" TEXT,
   role user_role,
   member_type TEXT -- 'player', 'coach', 'delegate'
 ) AS $$

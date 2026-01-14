@@ -163,7 +163,7 @@ export default function ALaCanchaScreen() {
           colors={[ClubColors.primary, ClubColors.primaryDark, ClubColors.background]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 24 }}
+          style={{ paddingHorizontal: 20, paddingTop: 90, paddingBottom: 40 }}
         >
           <Animated.View entering={FadeInDown.duration(500)}>
             <Text className="text-white text-3xl font-bold">A la Cancha</Text>

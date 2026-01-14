@@ -86,6 +86,7 @@ export default function TabLayout() {
         name="mi-equipo"
         options={{
           href: null,
+          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -98,6 +99,13 @@ export default function TabLayout() {
         name="explore"
         options={{
           href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          href: null,
+          headerShown: false,
         }}
       />
     </Tabs>

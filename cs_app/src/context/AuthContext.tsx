@@ -10,12 +10,12 @@ interface AuthContextType {
   userRole: UserRole | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
-  signInWithApple: () => Promise<{ error: Error | null }>;
+  updateProfile: (data: { full_name?: string; phone?: string; avatar_url?: string }) => Promise<{ error: Error | null }>;
+  uploadAvatar: (uri: string) => Promise<{ url: string | null; error: Error | null }>;
   // RBAC helpers
   canAccessTeam: boolean;
   canRecordAttendance: boolean;
@@ -102,15 +102,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, phone: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName }
+        data: { full_name: fullName, phone }
       }
     });
-    return { error };
+
+    if (error) {
+      console.error('Signup error:', error.message, error);
+      return { error };
+    }
+
+    // Profile is created automatically by database trigger (handle_new_user)
+    return { error: null };
   };
 
   const signOut = async () => {
@@ -124,24 +131,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: 'csapp://auth/callback',
-      },
-    });
+  const updateProfile = async (data: { full_name?: string; phone?: string; avatar_url?: string }) => {
+    if (!user?.id) {
+      return { error: new Error('No user logged in') };
+    }
+
+    const { error } = await (supabase
+      .from('profiles') as any)
+      .update(data)
+      .eq('id', user.id);
+
+    if (!error) {
+      await refreshProfile();
+    }
+
     return { error };
   };
 
-  const signInWithApple = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: {
-        redirectTo: 'csapp://auth/callback',
-      },
-    });
-    return { error };
+  const uploadAvatar = async (uri: string): Promise<{ url: string | null; error: Error | null }> => {
+    if (!user?.id) {
+      return { url: null, error: new Error('No user logged in') };
+    }
+
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, blob, {
+          contentType: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`,
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        return { url: null, error: uploadError };
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      return { url: publicUrl, error: null };
+    } catch (err) {
+      console.error('Avatar upload error:', err);
+      return { url: null, error: err as Error };
+    }
   };
 
   return (
@@ -157,8 +197,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         refreshProfile,
         resetPassword,
-        signInWithGoogle,
-        signInWithApple,
+        updateProfile,
+        uploadAvatar,
         canAccessTeam,
         canRecordAttendance,
         canSendNotifications,

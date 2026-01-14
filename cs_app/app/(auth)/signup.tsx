@@ -13,11 +13,11 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, router } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated';
-import { ArrowLeft, Mail, User, CreditCard, CheckCircle, AlertCircle, Info } from 'lucide-react-native';
+import { ArrowLeft, Mail, User, CreditCard, CheckCircle, AlertCircle, Info, Phone, Lock } from 'lucide-react-native';
 
 import { AuthInput, AuthButton } from '@/src/components/auth';
 import { ClubColors, Glass, BorderRadius, Spacing } from '@/constants/theme';
-import { validateEmail, validatePassword, validatePasswordMatch, validateFullName } from '@/src/utils/validation';
+import { validateEmail, validatePassword, validatePasswordMatch, validateFullName, validatePhone, formatPhone } from '@/src/utils/validation';
 import { formatCedula, validateCedula } from '@/src/utils/uruguayanId';
 import { useAuth } from '@/src/context/AuthContext';
 import { verifyCedulaAgainstSocios, Socio } from '@/src/services/membershipService';
@@ -31,6 +31,7 @@ export default function SignupScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [cedula, setCedula] = useState('');
+  const [phone, setPhone] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('idle');
@@ -83,6 +84,7 @@ export default function SignupScreen() {
     const newErrors: Record<string, string | null> = {
       fullName: validateFullName(fullName),
       email: validateEmail(email),
+      phone: validatePhone(phone),
       password: validatePassword(password),
       confirmPassword: validatePasswordMatch(password, confirmPassword),
       cedula: validateCedula(cedula),
@@ -101,7 +103,7 @@ export default function SignupScreen() {
     }
 
     setLoading(true);
-    const { error } = await signUp(email, password, fullName);
+    const { error } = await signUp(email, password, fullName, phone.replace(/\D/g, ''));
     setLoading(false);
 
     if (error) {
@@ -212,12 +214,26 @@ export default function SignupScreen() {
             />
 
             <AuthInput
+              label="Teléfono"
+              value={phone}
+              onChangeText={setPhone}
+              formatter={formatPhone}
+              placeholder="09X XXX XXX"
+              keyboardType="phone-pad"
+              autoComplete="tel"
+              error={errors.phone}
+              leftIcon={<Phone size={20} color={ClubColors.muted} />}
+            />
+
+            <AuthInput
               label="Contraseña"
               value={password}
               onChangeText={setPassword}
               placeholder="Mínimo 8 caracteres"
               secureTextEntry
+              autoComplete="new-password"
               error={errors.password}
+              leftIcon={<Lock size={20} color={ClubColors.muted} />}
             />
 
             <AuthInput
@@ -226,7 +242,9 @@ export default function SignupScreen() {
               onChangeText={setConfirmPassword}
               placeholder="Repetí tu contraseña"
               secureTextEntry
+              autoComplete="new-password"
               error={errors.confirmPassword}
+              leftIcon={<Lock size={20} color={ClubColors.muted} />}
             />
           </Animated.View>
 

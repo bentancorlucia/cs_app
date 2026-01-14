@@ -67,7 +67,7 @@ export default function MiEquipoScreen() {
           colors={[ClubColors.primary, ClubColors.primaryDark, ClubColors.background]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 24 }}
+          style={{ paddingHorizontal: 20, paddingTop: 90, paddingBottom: 40 }}
         >
           <Animated.View entering={FadeInDown.duration(500)}>
             <Text style={{ color: 'white', fontSize: 30, fontWeight: 'bold' }}>Mi Equipo</Text>

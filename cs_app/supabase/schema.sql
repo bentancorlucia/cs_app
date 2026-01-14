@@ -525,13 +525,27 @@ CREATE POLICY "Users can manage their notification status"
 -- -----------------------------------------
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  user_role_val user_role;
 BEGIN
-  INSERT INTO profiles (id, email, full_name, role)
+  -- Safely get role from metadata, defaulting to 'no_socio'
+  BEGIN
+    user_role_val := (NEW.raw_user_meta_data->>'role')::user_role;
+  EXCEPTION WHEN OTHERS THEN
+    user_role_val := 'no_socio';
+  END;
+
+  IF user_role_val IS NULL THEN
+    user_role_val := 'no_socio';
+  END IF;
+
+  INSERT INTO profiles (id, email, full_name, phone, role)
   VALUES (
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'no_socio')
+    NEW.raw_user_meta_data->>'phone',
+    user_role_val
   );
   RETURN NEW;
 END;
@@ -684,7 +698,49 @@ INSERT INTO socios (cedula_identidad, full_name, email, membership_type, members
 ON CONFLICT (cedula_identidad) DO NOTHING;
 
 -- =============================================
--- 10. GRANTS (for service role access)
+-- 10. STORAGE BUCKET AND POLICIES
+-- =============================================
+
+-- Create the avatars bucket (run this in SQL Editor or via Dashboard)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Allow authenticated users to upload avatars (filename must start with their user id)
+CREATE POLICY "Users can upload avatars"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'avatars' AND
+  (auth.uid())::text = (string_to_array(name, '-'))[1]
+);
+
+-- Allow authenticated users to update their own avatars
+CREATE POLICY "Users can update their own avatar"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'avatars' AND
+  (auth.uid())::text = (string_to_array(name, '-'))[1]
+);
+
+-- Allow authenticated users to delete their own avatars
+CREATE POLICY "Users can delete their own avatar"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'avatars' AND
+  (auth.uid())::text = (string_to_array(name, '-'))[1]
+);
+
+-- Allow public read access to avatars
+CREATE POLICY "Anyone can view avatars"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'avatars');
+
+-- =============================================
+-- 11. GRANTS (for service role access)
 -- =============================================
 
 -- Grant usage on schema

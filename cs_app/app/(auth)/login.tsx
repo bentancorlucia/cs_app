@@ -15,7 +15,7 @@ import { Link, router } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated';
 import { Mail } from 'lucide-react-native';
 
-import { AuthInput, AuthButton, SocialLoginButton } from '@/src/components/auth';
+import { AuthInput, AuthButton } from '@/src/components/auth';
 import { ClubColors, Glass, BorderRadius, Spacing } from '@/constants/theme';
 import { validateEmail, validatePassword } from '@/src/utils/validation';
 import { useAuth } from '@/src/context/AuthContext';
@@ -43,14 +43,6 @@ export default function LoginScreen() {
     if (error) {
       Alert.alert('Error', 'Credenciales inválidas. Verificá tu correo y contraseña.');
     }
-  };
-
-  const handleGoogleLogin = () => {
-    Alert.alert('Google Sign-In', 'Configurar OAuth en Supabase dashboard primero');
-  };
-
-  const handleAppleLogin = () => {
-    Alert.alert('Apple Sign-In', 'Configurar Apple Sign-In en Supabase dashboard primero');
   };
 
   return (
@@ -125,19 +117,6 @@ export default function LoginScreen() {
               style={styles.loginButton}
             />
           </View>
-
-          {/* Divider */}
-          <Animated.View entering={FadeIn.duration(400).delay(400)} style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>O continuar con</Text>
-            <View style={styles.dividerLine} />
-          </Animated.View>
-
-          {/* Social buttons */}
-          <Animated.View entering={FadeInUp.duration(500).delay(400)} style={styles.socialButtons}>
-            <SocialLoginButton provider="google" onPress={handleGoogleLogin} />
-            <SocialLoginButton provider="apple" onPress={handleAppleLogin} />
-          </Animated.View>
 
           {/* Sign up link */}
           <Animated.View entering={FadeIn.duration(400).delay(500)} style={styles.signupLink}>
@@ -216,25 +195,6 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     marginTop: Spacing.sm,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: Spacing.lg,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Glass.border,
-  },
-  dividerText: {
-    color: ClubColors.muted,
-    fontSize: 14,
-    paddingHorizontal: Spacing.md,
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    gap: Spacing.md,
   },
   signupLink: {
     flexDirection: 'row',

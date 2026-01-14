@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { TrendingUp, Minus, TrendingDown, Calendar, Trophy } from 'lucide-react-native';
+import { TrendingUp, Minus, TrendingDown, Calendar, Swords } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInRight, FadeIn, FadeInUp } from 'react-native-reanimated';
 import { ClubColors, Glass } from '@/constants/theme';
 import { Match } from '@/src/types/database';
+import { Image } from 'react-native';
 
 // Extended Match type with scores for completed matches
 interface CompletedMatch extends Match {
@@ -230,7 +231,7 @@ export default function ResultadosScreen() {
           colors={[ClubColors.primary, ClubColors.primaryDark, ClubColors.background]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 24 }}
+          style={{ paddingHorizontal: 20, paddingTop: 90, paddingBottom: 40 }}
         >
           <Animated.View entering={FadeInDown.duration(500)}>
             <Text className="text-white text-3xl font-bold">Historial de Resultados</Text>
@@ -406,7 +407,7 @@ export default function ResultadosScreen() {
                   marginBottom: 16,
                 }}
               >
-                <Trophy size={36} color={ClubColors.muted} />
+                <Swords size={36} color={ClubColors.muted} />
               </View>
               <Text style={{ color: ClubColors.muted, textAlign: 'center', fontSize: 16 }}>
                 No hay resultados{'\n'}con estos filtros
@@ -490,7 +491,11 @@ export default function ResultadosScreen() {
                                 marginRight: 12,
                               }}
                             >
-                              <Text style={{ fontSize: 18 }}>{'\ud83d\udc3a'}</Text>
+                              <Image
+                                source={require('@/assets/images/logo-cs.png')}
+                                style={{ width: 24, height: 24 }}
+                                resizeMode="contain"
+                              />
                             </View>
                             <View style={{ flex: 1 }}>
                               <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }} numberOfLines={1}>
@@ -529,7 +534,7 @@ export default function ResultadosScreen() {
                                 justifyContent: 'center',
                               }}
                             >
-                              <Trophy size={18} color={resultColor} />
+                              <Swords size={18} color={resultColor} />
                             </View>
                           </View>
                         </View>

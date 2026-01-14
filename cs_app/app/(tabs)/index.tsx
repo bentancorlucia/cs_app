@@ -16,6 +16,7 @@ import {
   ChevronRight,
   MapPin,
   Clock,
+  User,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Animated, {
@@ -25,6 +26,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ClubColors, Glass } from '@/constants/theme';
 import { Match } from '@/src/types/database';
+import { useAuth } from '@/src/context/AuthContext';
 
 // Club logo
 const clubLogo = require('@/assets/images/logo-cs.png');
@@ -59,6 +61,7 @@ const mockDisciplines = [
   { id: '4', name: 'Handball', emoji: '\ud83e\udd3e' },
   { id: '5', name: 'Hockey', emoji: '\ud83c\udfd1' },
   { id: '6', name: 'Voleibol', emoji: '\ud83c\udfd0' },
+  { id: '7', name: 'Corredores', emoji: '\uD83C\uDFC3' },
 ];
 
 // Mock upcoming matches
@@ -136,6 +139,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export default function HomeScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const { profile } = useAuth();
 
   return (
     <View style={{ flex: 1, backgroundColor: ClubColors.background }}>
@@ -150,7 +154,7 @@ export default function HomeScreen() {
           colors={[ClubColors.primary, ClubColors.primaryDark, ClubColors.background]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 40 }}
+          style={{ paddingHorizontal: 20, paddingTop: 90, paddingBottom: 56 }}
         >
           {/* Welcome and Avatar */}
           <Animated.View
@@ -159,24 +163,29 @@ export default function HomeScreen() {
           >
             <View>
               <Text style={{ color: ClubColors.muted }} className="text-base font-medium">
-                Bienvenido,
+                Hola,
               </Text>
               <Text className="text-white text-4xl font-bold tracking-tight">
-                {mockUser.name}
+                {profile?.full_name?.split(' ')[0] || mockUser.name}
               </Text>
             </View>
-            <Pressable>
+            <Pressable onPress={() => router.push('/perfil')}>
               <View
-                className="w-14 h-14 rounded-full overflow-hidden"
+                className="w-14 h-14 rounded-full overflow-hidden items-center justify-center"
                 style={{
                   borderWidth: 2,
                   borderColor: ClubColors.secondary,
+                  backgroundColor: 'rgba(255,255,255,0.08)',
                 }}
               >
-                <Image
-                  source={{ uri: mockUser.avatar }}
-                  className="w-full h-full"
-                />
+                {profile?.avatar_url ? (
+                  <Image
+                    source={{ uri: profile.avatar_url }}
+                    className="w-full h-full"
+                  />
+                ) : (
+                  <User size={24} color={ClubColors.muted} />
+                )}
               </View>
             </Pressable>
           </Animated.View>
@@ -253,35 +262,37 @@ export default function HomeScreen() {
         >
           <AnimatedPressable
             className="flex-1 overflow-hidden"
-            style={{ minHeight: 190, borderRadius: 28 }}
+            style={{ height: 190, borderRadius: 28}}
             onPress={() => router.push('/(tabs)/a-la-cancha' as never)}
           >
-            <LinearGradient
-              colors={[ClubColors.primary, ClubColors.primaryDark]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+            <View
               className="flex-1 p-5 justify-between"
-              style={{ borderRadius: 28 }}
+              style={{
+                backgroundColor: ClubColors.primary,
+                borderRadius: 28,
+                borderWidth: 1,
+                borderColor: Glass.border,
+              }}
             >
               <View
                 className="w-14 h-14 items-center justify-center"
-                style={{ backgroundColor: 'rgba(247,182,67,0.2)', borderRadius: 16 }}
+                style={{ backgroundColor: 'rgba(247,182,67,0.15)', borderRadius: 16 }}
               >
                 <Calendar size={28} color={ClubColors.secondary} />
               </View>
               <View>
                 <Text className="text-white font-bold text-xl">A la</Text>
                 <Text className="text-white font-bold text-xl -mt-1">Cancha</Text>
-                <Text style={{ color: 'rgba(255,255,255,0.6)' }} className="text-sm mt-2">
+                <Text style={{ color: ClubColors.muted }} className="text-sm mt-2">
                   Próximos partidos
                 </Text>
               </View>
-            </LinearGradient>
+            </View>
           </AnimatedPressable>
 
           <AnimatedPressable
             className="flex-1 overflow-hidden"
-            style={{ minHeight: 180, borderRadius: 28 }}
+            style={{ height: 190, borderRadius: 28}}
             onPress={() => router.push('/(tabs)/mi-equipo' as never)}
           >
             <View

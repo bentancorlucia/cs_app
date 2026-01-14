@@ -15,20 +15,8 @@ Go to **Authentication** → **Providers**:
 
 #### Email
 - ✅ Enable Email provider
-- ✅ Enable "Confirm email"
+- ✅ Enable "Confirm email" (optional, can disable for easier testing)
 - Set Site URL: `csapp://` (for deep linking)
-
-#### Google OAuth
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create OAuth 2.0 credentials
-3. Add authorized redirect URI: `https://twxxjqitqglidxqckumr.supabase.co/auth/v1/callback`
-4. Copy Client ID and Secret to Supabase
-
-#### Apple OAuth
-1. Go to [Apple Developer Portal](https://developer.apple.com)
-2. Create Sign in with Apple service
-3. Configure return URL: `https://twxxjqitqglidxqckumr.supabase.co/auth/v1/callback`
-4. Add credentials to Supabase
 
 ### 3. Configure URL Settings
 
@@ -145,9 +133,9 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 - Run `functions.sql` in SQL Editor
 - Functions are case-sensitive
 
-### OAuth not working
+### Password reset not working
 - Verify redirect URLs match exactly
-- Check provider credentials
+- Check email templates are configured
 - Ensure Site URL is set correctly
 
 ---

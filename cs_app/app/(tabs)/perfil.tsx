@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Settings, Trophy, Clock, Target, Users, Calendar } from 'lucide-react-native';
+import { Settings, Trophy, Clock, Target, Users, Calendar, User } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/src/context/AuthContext';
 import { ClubColors, Glass } from '@/constants/theme';
 
@@ -30,6 +31,7 @@ const mockStats = {
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function PerfilScreen() {
+  const router = useRouter();
   const { profile, userRole } = useAuth();
 
   const roleLabels: Record<string, string> = {
@@ -54,7 +56,7 @@ export default function PerfilScreen() {
           colors={[ClubColors.primary, ClubColors.primaryDark, ClubColors.background]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 24 }}
+          style={{ paddingHorizontal: 20, paddingTop: 90, paddingBottom: 40 }}
         >
           <Animated.View
             entering={FadeInDown.duration(500)}
@@ -63,6 +65,7 @@ export default function PerfilScreen() {
             <Text style={{ color: 'white', fontSize: 30, fontWeight: 'bold' }}>Mi Perfil</Text>
             <AnimatedPressable
               entering={FadeIn.duration(400).delay(200)}
+              onPress={() => router.push('/settings')}
               style={{
                 width: 44,
                 height: 44,
@@ -101,12 +104,19 @@ export default function PerfilScreen() {
                   borderColor: ClubColors.secondary,
                   overflow: 'hidden',
                   marginRight: 16,
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                <Image
-                  source={{ uri: mockProfile.avatar }}
-                  style={{ width: '100%', height: '100%' }}
-                />
+                {profile?.avatar_url ? (
+                  <Image
+                    source={{ uri: profile.avatar_url }}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                ) : (
+                  <User size={40} color={ClubColors.muted} />
+                )}
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>
@@ -248,87 +258,9 @@ export default function PerfilScreen() {
           style={{ paddingHorizontal: 20, marginTop: 24 }}
         >
           <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Mis Estadísticas</Text>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <View
-              style={{
-                flex: 1,
-                padding: 20,
-                backgroundColor: 'rgba(247, 182, 67, 0.12)',
-                borderRadius: 24,
-                borderWidth: 1,
-                borderColor: 'rgba(247, 182, 67, 0.2)',
-              }}
-            >
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
-                  backgroundColor: 'rgba(247, 182, 67, 0.2)',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Target size={22} color={ClubColors.secondary} />
-              </View>
-              <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 12 }}>{mockStats.goals}</Text>
-              <Text style={{ color: ClubColors.muted, fontSize: 14, fontWeight: '500' }}>Goles</Text>
-            </View>
-
-            <View
-              style={{
-                flex: 1,
-                padding: 20,
-                backgroundColor: 'rgba(34, 197, 94, 0.12)',
-                borderRadius: 24,
-                borderWidth: 1,
-                borderColor: 'rgba(34, 197, 94, 0.2)',
-              }}
-            >
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
-                  backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Users size={22} color="#22c55e" />
-              </View>
-              <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 12 }}>{mockStats.assists}</Text>
-              <Text style={{ color: ClubColors.muted, fontSize: 14, fontWeight: '500' }}>Asistencias</Text>
-            </View>
-          </View>
+          
 
           <View style={{ flexDirection: 'row', marginTop: 12, gap: 12 }}>
-            <View
-              style={{
-                flex: 1,
-                padding: 20,
-                backgroundColor: 'rgba(115, 13, 50, 0.3)',
-                borderRadius: 24,
-                borderWidth: 1,
-                borderColor: 'rgba(115, 13, 50, 0.4)',
-              }}
-            >
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
-                  backgroundColor: 'rgba(247, 182, 67, 0.2)',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Trophy size={22} color={ClubColors.secondary} />
-              </View>
-              <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 12 }}>{mockStats.trophies}</Text>
-              <Text style={{ color: ClubColors.muted, fontSize: 14, fontWeight: '500' }}>Torneos</Text>
-            </View>
-
             <View
               style={{
                 flex: 1,
@@ -352,7 +284,25 @@ export default function PerfilScreen() {
                 <Clock size={22} color="#3b82f6" />
               </View>
               <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 12 }}>{mockStats.attendance}%</Text>
-              <Text style={{ color: ClubColors.muted, fontSize: 14, fontWeight: '500' }}>Asistencia</Text>
+              <Text style={{ color: ClubColors.muted, fontSize: 14, fontWeight: '500', marginBottom: 12 }}>Asistencia</Text>
+              {/* Progress Bar */}
+              <View
+                style={{
+                  height: 8,
+                  backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                }}
+              >
+                <View
+                  style={{
+                    width: `${mockStats.attendance}%`,
+                    height: '100%',
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4,
+                  }}
+                />
+              </View>
             </View>
           </View>
         </Animated.View>
