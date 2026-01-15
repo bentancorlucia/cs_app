@@ -83,7 +83,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, session) => {
         console.log('Auth event:', event);
 
-        // Only update session/user state if actually changed
+        // For SIGNED_IN from OTP verification, don't disrupt the current flow
+        // Only update session/user if there's an actual change
+        const currentUserId = user?.id;
+        const newUserId = session?.user?.id;
+
+        // If same user, just update session without triggering loading states
+        if (currentUserId && newUserId && currentUserId === newUserId) {
+          setSession(session);
+          // Skip profile fetch and loading changes for same-user events
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -94,9 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null);
         }
 
-        // Don't set isLoading to false for USER_UPDATED or TOKEN_REFRESHED
+        // Don't set isLoading to false for USER_UPDATED, TOKEN_REFRESHED, or SIGNED_IN (when same user)
         // as these shouldn't trigger a full reload state
-        if (event !== 'USER_UPDATED' && event !== 'TOKEN_REFRESHED') {
+        if (event !== 'USER_UPDATED' && event !== 'TOKEN_REFRESHED' && event !== 'SIGNED_IN') {
           setIsLoading(false);
         }
       }
