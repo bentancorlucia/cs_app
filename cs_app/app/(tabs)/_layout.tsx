@@ -4,7 +4,7 @@ import { ActivityIndicator } from 'react-native';
 import { Home, Calendar, Trophy, User } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { HapticTab } from '@/components/haptic-tab';
+import { LiquidGlassTabBar } from '@/components/liquid-glass-tab-bar';
 import { ClubColors } from '@/constants/theme';
 import { useAuth } from '@/src/context/AuthContext';
 
@@ -25,9 +25,10 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <LiquidGlassTabBar {...props} />}
       screenOptions={{
         tabBarActiveTintColor: ClubColors.secondary,
-        tabBarInactiveTintColor: '#ffffff',
+        tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.7)',
         headerShown: true,
         headerStyle: {
           backgroundColor: ClubColors.primary,
@@ -36,19 +37,11 @@ export default function TabLayout() {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
-        tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: ClubColors.primary,
-          borderTopColor: ClubColors.primaryDark,
-          borderTopWidth: 1,
-          paddingTop: 8,
-          paddingBottom: 8,
-          height: 70,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '500',
-          marginTop: 4,
+          position: 'absolute',
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
         },
         sceneStyle: { backgroundColor: ClubColors.background },
         animation: 'shift',
