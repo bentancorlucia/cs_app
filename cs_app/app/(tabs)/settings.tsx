@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, Alert, KeyboardAvoidingView, Platform, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, User, Phone, LogOut, Camera } from 'lucide-react-native';
+import { ChevronLeft, User, Phone, LogOut, Camera, Lock } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -127,6 +127,7 @@ export default function SettingsScreen() {
             >
               <Pressable
                 onPress={() => router.back()}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 style={{
                   width: 44,
                   height: 44,
@@ -276,15 +277,47 @@ export default function SettingsScreen() {
                 </Text>
               </View>
 
+              {/* Change Password Button */}
+              <Pressable
+                onPress={() => router.push('/change-password')}
+                hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
+                style={({ pressed }) => ({
+                  padding: 16,
+                  borderBottomWidth: 1,
+                  borderBottomColor: Glass.border,
+                  backgroundColor: pressed ? 'rgba(247, 182, 67, 0.1)' : 'transparent',
+                })}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, paddingBottom: 8 }}>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 12,
+                      backgroundColor: 'rgba(247, 182, 67, 0.15)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 12,
+                    }}
+                  >
+                    <Lock size={20} color={ClubColors.secondary} />
+                  </View>
+                  <Text style={{ color: ClubColors.secondary, fontSize: 16, fontWeight: '600' }}>
+                    Cambiar Contraseña
+                  </Text>
+                </View>
+              </Pressable>
+
               {/* Logout Button */}
               <Pressable
                 onPress={handleLogout}
+                hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
                 style={({ pressed }) => ({
                   padding: 16,
                   backgroundColor: pressed ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
                 })}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16}}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 8 }}>
                   <View
                     style={{
                       width: 40,
@@ -294,7 +327,6 @@ export default function SettingsScreen() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginRight: 12,
-                      
                     }}
                   >
                     <LogOut size={20} color={ClubColors.error} />

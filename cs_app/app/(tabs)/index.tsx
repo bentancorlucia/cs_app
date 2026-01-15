@@ -169,7 +169,10 @@ export default function HomeScreen() {
                 {profile?.full_name?.split(' ')[0] || mockUser.name}
               </Text>
             </View>
-            <Pressable onPress={() => router.push('/perfil')}>
+            <Pressable
+              onPress={() => router.push('/perfil')}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
               <View
                 className="w-14 h-14 rounded-full overflow-hidden items-center justify-center"
                 style={{
@@ -331,6 +334,7 @@ export default function HomeScreen() {
             <Pressable
               style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(247,182,67,0.12)', borderRadius: 12 }}
               onPress={() => router.push('/(tabs)/a-la-cancha' as never)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Text style={{ color: ClubColors.secondary, fontSize: 14, fontWeight: '500', marginRight: 4 }}>
                 Ver todos

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,52 +10,70 @@ import {
   ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated';
 import { ChevronLeft, Mail, CheckCircle, KeyRound, Lock } from 'lucide-react-native';
 
 import { AuthInput, AuthButton } from '@/src/components/auth';
 import { ClubColors, Glass, BorderRadius, Spacing } from '@/constants/theme';
-import { validateEmail, sanitizeEmail, validatePassword } from '@/src/utils/validation';
+import { validatePassword } from '@/src/utils/validation';
 import { supabase } from '@/src/lib/supabase';
+import { useAuth } from '@/src/context/AuthContext';
 
-type Step = 'email' | 'otp' | 'newPassword' | 'success';
+type Step = 'request' | 'otp' | 'newPassword' | 'success';
 
-export default function ForgotPasswordScreen() {
-  const [step, setStep] = useState<Step>('email');
-  const [email, setEmail] = useState('');
+export default function ChangePasswordScreen() {
+  const { profile } = useAuth();
+  const [step, setStep] = useState<Step>('request');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Step 1: Send OTP to email
+  // Track if component is mounted to avoid state updates after unmount
+  const isMounted = useRef(true);
+  // Track if we're in the password change flow to ignore auth events
+  const isInPasswordFlow = useRef(false);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const userEmail = profile?.email ?? '';
+
+  // Step 1: Send OTP to user's email
   const handleSendOtp = async () => {
-    const emailError = validateEmail(email);
-    setError(emailError);
-    if (emailError) return;
-
-    setLoading(true);
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email: sanitizeEmail(email),
-      options: {
-        shouldCreateUser: false,
-      },
-    });
-    setLoading(false);
-
-    if (otpError) {
-      Alert.alert('Error envío OTP', otpError.message);
-      if (otpError.message.includes('User not found') || otpError.message.includes('Signups not allowed')) {
-        setError('No existe una cuenta con este email.');
-      } else {
-        setError(`Error al enviar el código: ${otpError.message}`);
-      }
+    if (!userEmail) {
+      Alert.alert('Error', 'No se encontró el email del usuario.');
       return;
     }
 
-    setStep('otp');
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: userEmail,
+        options: {
+          shouldCreateUser: false,
+        },
+      });
+
+      if (otpError) {
+        setError(`Error al enviar el código: ${otpError.message}`);
+        return;
+      }
+
+      setStep('otp');
+    } catch (e) {
+      setError('Error al enviar el código. Intentá de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Step 2: Verify OTP code
@@ -66,28 +84,38 @@ export default function ForgotPasswordScreen() {
       return;
     }
 
-    const cleanEmail = sanitizeEmail(email);
-
     setLoading(true);
     setError(null);
+    isInPasswordFlow.current = true;
 
     try {
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        email: cleanEmail,
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        email: userEmail,
         token: trimmedOtp,
         type: 'email',
       });
 
-      setLoading(false);
+      if (!isMounted.current) return;
 
       if (verifyError) {
-        Alert.alert('Error Supabase', verifyError.message);
-        setError(`Código inválido: ${verifyError.message}`);
+        setLoading(false);
+        setError('Código inválido o expirado. Intentá de nuevo.');
         return;
       }
-    } catch (e: any) {
-      setLoading(false);
-      Alert.alert('Error catch', e.message);
+
+      // Small delay to let auth state settle before transitioning
+      // This prevents race conditions with onAuthStateChange
+      setTimeout(() => {
+        if (isMounted.current) {
+          setStep('newPassword');
+          setLoading(false);
+        }
+      }, 100);
+    } catch (e) {
+      if (isMounted.current) {
+        setLoading(false);
+        setError('Error al verificar el código.');
+      }
     }
   };
 
@@ -107,22 +135,35 @@ export default function ForgotPasswordScreen() {
     }
 
     setLoading(true);
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: password,
-    });
-    setLoading(false);
 
-    if (updateError) {
-      setError('Error al actualizar la contraseña. Intentá de nuevo.');
-      return;
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password,
+      });
+
+      if (!isMounted.current) return;
+
+      if (updateError) {
+        setLoading(false);
+        setError('Error al actualizar la contraseña. Intentá de nuevo.');
+        return;
+      }
+
+      setLoading(false);
+      setStep('success');
+
+      // Return to settings after delay
+      setTimeout(() => {
+        if (isMounted.current) {
+          router.dismiss();
+        }
+      }, 2000);
+    } catch (e) {
+      if (isMounted.current) {
+        setLoading(false);
+        setError('Error inesperado. Intentá de nuevo.');
+      }
     }
-
-    setStep('success');
-
-    // Redirect to main app after delay
-    setTimeout(() => {
-      router.replace('/(tabs)');
-    }, 2000);
   };
 
   // Success screen
@@ -152,17 +193,17 @@ export default function ForgotPasswordScreen() {
   // Get current step content
   const getStepContent = () => {
     switch (step) {
-      case 'email':
+      case 'request':
         return {
-          title: 'Recuperar Contraseña',
-          subtitle: 'Te enviaremos un código de verificación a tu email',
+          title: 'Cambiar Contraseña',
+          subtitle: `Enviaremos un código de verificación a ${userEmail}`,
           buttonText: 'Enviar Código',
           onSubmit: handleSendOtp,
         };
       case 'otp':
         return {
           title: 'Verificar Código',
-          subtitle: `Ingresá el código de 8 dígitos enviado a ${email}`,
+          subtitle: `Ingresá el código de 8 dígitos enviado a ${userEmail}`,
           buttonText: 'Verificar',
           onSubmit: handleVerifyOtp,
         };
@@ -200,11 +241,12 @@ export default function ForgotPasswordScreen() {
           <Animated.View entering={FadeInDown.duration(500)} style={styles.headerContent}>
             <Pressable
               onPress={() => {
-                if (step === 'email') {
+                if (step === 'request') {
                   router.back();
                 } else if (step === 'otp') {
-                  setStep('email');
+                  setStep('request');
                   setError(null);
+                  setOtp('');
                 } else if (step === 'newPassword') {
                   setStep('otp');
                   setError(null);
@@ -219,7 +261,7 @@ export default function ForgotPasswordScreen() {
 
             {/* Step indicator */}
             <View style={styles.stepIndicator}>
-              <View style={[styles.stepDot, step === 'email' && styles.stepDotActive]} />
+              <View style={[styles.stepDot, step === 'request' && styles.stepDotActive]} />
               <View style={[styles.stepLine, (step === 'otp' || step === 'newPassword') && styles.stepLineActive]} />
               <View style={[styles.stepDot, step === 'otp' && styles.stepDotActive]} />
               <View style={[styles.stepLine, step === 'newPassword' && styles.stepLineActive]} />
@@ -231,17 +273,15 @@ export default function ForgotPasswordScreen() {
         {/* Form */}
         <View style={styles.formContainer}>
           <Animated.View entering={FadeInUp.duration(600).delay(200)} style={styles.formCard}>
-            {step === 'email' && (
-              <AuthInput
-                label="Correo electrónico"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="tu@email.com"
-                keyboardType="email-address"
-                autoComplete="email"
-                error={error}
-                leftIcon={<Mail size={20} color={ClubColors.muted} />}
-              />
+            {step === 'request' && (
+              <View style={styles.infoContainer}>
+                <View style={styles.emailIcon}>
+                  <Mail size={32} color={ClubColors.secondary} />
+                </View>
+                <Text style={styles.infoText}>
+                  Por seguridad, necesitamos verificar tu identidad antes de cambiar la contraseña.
+                </Text>
+              </View>
             )}
 
             {step === 'otp' && (
@@ -291,18 +331,11 @@ export default function ForgotPasswordScreen() {
                 onPress={handleSendOtp}
                 disabled={loading}
               >
-                <Text style={styles.resendText}>¿No recibiste el código? Reenviar</Text>
+                <Text style={[styles.resendText, loading && { opacity: 0.5 }]}>
+                  ¿No recibiste el código? Reenviar
+                </Text>
               </Pressable>
             )}
-          </Animated.View>
-
-          <Animated.View entering={FadeIn.duration(400).delay(400)} style={styles.loginLink}>
-            <Text style={styles.loginText}>¿Recordaste tu contraseña? </Text>
-            <Link href="/(auth)/login" asChild>
-              <Pressable>
-                <Text style={styles.loginLinkText}>Iniciá sesión</Text>
-              </Pressable>
-            </Link>
           </Animated.View>
         </View>
       </ScrollView>
@@ -386,8 +419,27 @@ const styles = StyleSheet.create({
     borderColor: Glass.border,
     padding: Spacing.lg,
   },
+  infoContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+  },
+  emailIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(247, 182, 67, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
+  },
+  infoText: {
+    color: ClubColors.gray[300],
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
   submitButton: {
-    marginTop: Spacing.sm,
+    marginTop: Spacing.md,
   },
   resendButton: {
     marginTop: Spacing.md,
@@ -396,21 +448,6 @@ const styles = StyleSheet.create({
   resendText: {
     color: ClubColors.secondary,
     fontSize: 14,
-  },
-  loginLink: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: Spacing.xl,
-  },
-  loginText: {
-    color: ClubColors.muted,
-    fontSize: 15,
-  },
-  loginLinkText: {
-    color: ClubColors.secondary,
-    fontSize: 15,
-    fontWeight: '600',
   },
   // Success state
   successContainer: {

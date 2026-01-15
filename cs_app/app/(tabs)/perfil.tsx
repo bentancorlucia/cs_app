@@ -66,6 +66,7 @@ export default function PerfilScreen() {
             <AnimatedPressable
               entering={FadeIn.duration(400).delay(200)}
               onPress={() => router.push('/settings')}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               style={{
                 width: 44,
                 height: 44,

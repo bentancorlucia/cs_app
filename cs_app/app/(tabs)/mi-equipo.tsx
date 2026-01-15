@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Image } from 'react-native';
+import { View, Text, ScrollView, Image, Pressable, Linking, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Users, Mail, Phone } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -44,14 +44,29 @@ const mockStaff = [
     name: 'Roberto Sanchez',
     role: 'Director Técnico',
     avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face',
+    email: 'roberto.sanchez@clubseminario.com',
+    phone: '+598 99 123 456',
   },
   {
     id: '2',
     name: 'Ana Garcia',
     role: 'Delegada',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face',
+    email: 'ana.garcia@clubseminario.com',
+    phone: '+598 99 654 321',
   },
 ];
+
+const handleContact = async (type: 'email' | 'phone', value: string) => {
+  const url = type === 'email' ? `mailto:${value}` : `tel:${value.replace(/\s/g, '')}`;
+  const supported = await Linking.canOpenURL(url);
+
+  if (supported) {
+    await Linking.openURL(url);
+  } else {
+    Alert.alert('Error', `No se puede abrir ${type === 'email' ? 'el correo' : 'el teléfono'}`);
+  }
+};
 
 export default function MiEquipoScreen() {
   return (
@@ -169,30 +184,34 @@ export default function MiEquipoScreen() {
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 12 }}>
-                  <View
-                    style={{
+                  <Pressable
+                    onPress={() => handleContact('email', staff.email)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    style={({ pressed }) => ({
                       width: 40,
                       height: 40,
                       borderRadius: 12,
-                      backgroundColor: 'rgba(255,255,255,0.08)',
+                      backgroundColor: pressed ? 'rgba(247, 182, 67, 0.2)' : 'rgba(255,255,255,0.08)',
                       alignItems: 'center',
                       justifyContent: 'center',
-                    }}
+                    })}
                   >
                     <Mail size={18} color={ClubColors.muted} />
-                  </View>
-                  <View
-                    style={{
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleContact('phone', staff.phone)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    style={({ pressed }) => ({
                       width: 40,
                       height: 40,
                       borderRadius: 12,
-                      backgroundColor: 'rgba(255,255,255,0.08)',
+                      backgroundColor: pressed ? 'rgba(247, 182, 67, 0.2)' : 'rgba(255,255,255,0.08)',
                       alignItems: 'center',
                       justifyContent: 'center',
-                    }}
+                    })}
                   >
                     <Phone size={18} color={ClubColors.muted} />
-                  </View>
+                  </Pressable>
                 </View>
               </View>
             </Animated.View>

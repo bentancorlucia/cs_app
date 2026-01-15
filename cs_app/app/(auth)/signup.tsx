@@ -17,7 +17,7 @@ import { ChevronLeft, Mail, User, CreditCard, CheckCircle, AlertCircle, Info, Ph
 
 import { AuthInput, AuthButton } from '@/src/components/auth';
 import { ClubColors, Glass, BorderRadius, Spacing } from '@/constants/theme';
-import { validateEmail, validatePassword, validatePasswordMatch, validateFullName, validatePhone, formatPhone } from '@/src/utils/validation';
+import { validateEmail, validatePassword, validatePasswordMatch, validateFullName, validatePhone, formatPhone, sanitizeEmail, sanitizeText, MAX_NAME_LENGTH } from '@/src/utils/validation';
 import { formatCedula, validateCedula } from '@/src/utils/uruguayanId';
 import { useAuth } from '@/src/context/AuthContext';
 import { verifyCedulaAgainstSocios, Socio } from '@/src/services/membershipService';
@@ -103,7 +103,12 @@ export default function SignupScreen() {
     }
 
     setLoading(true);
-    const { error } = await signUp(email, password, fullName, phone.replace(/\D/g, ''));
+    const { error } = await signUp(
+      sanitizeEmail(email),
+      password,
+      sanitizeText(fullName, MAX_NAME_LENGTH),
+      phone.replace(/\D/g, '')
+    );
     setLoading(false);
 
     if (error) {

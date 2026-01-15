@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
+import { File } from 'expo-file-system';
 import { supabase } from '@/src/lib/supabase';
 import { Profile, UserRole } from '@/src/types/database';
 
@@ -80,6 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth event:', event);
+
+        // Only update session/user state if actually changed
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -90,7 +94,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null);
         }
 
-        setIsLoading(false);
+        // Don't set isLoading to false for USER_UPDATED or TOKEN_REFRESHED
+        // as these shouldn't trigger a full reload state
+        if (event !== 'USER_UPDATED' && event !== 'TOKEN_REFRESHED') {
+          setIsLoading(false);
+        }
       }
     );
 
@@ -154,17 +162,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
+      // Use new expo-file-system File API to read the image
+      const file = new File(uri);
+      const arrayBuffer = await file.arrayBuffer();
 
       const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
+      const contentType = `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, blob, {
-          contentType: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`,
+        .upload(filePath, arrayBuffer, {
+          contentType,
           upsert: true,
         });
 

@@ -31,14 +31,17 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const inAuthFlow = segments[0] === 'auth'; // For reset-password, callback, etc.
+    const inChangePassword = segments[0] === 'change-password';
 
-    if (!session && !inAuthGroup) {
+    if (!session && !inAuthGroup && !inAuthFlow) {
       // Not authenticated, redirect to login
       router.replace('/(auth)/login');
     } else if (session && inAuthGroup) {
       // Authenticated but in auth screens, redirect to main app
       router.replace('/(tabs)');
     }
+    // Note: inChangePassword is allowed for authenticated users, no redirect needed
   }, [session, isLoading, segments]);
 
   if (isLoading) {

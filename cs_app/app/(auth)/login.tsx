@@ -17,7 +17,7 @@ import { Mail } from 'lucide-react-native';
 
 import { AuthInput, AuthButton } from '@/src/components/auth';
 import { ClubColors, Glass, BorderRadius, Spacing } from '@/constants/theme';
-import { validateEmail, validatePassword } from '@/src/utils/validation';
+import { validateEmail, sanitizeEmail } from '@/src/utils/validation';
 import { useAuth } from '@/src/context/AuthContext';
 
 export default function LoginScreen() {
@@ -37,7 +37,7 @@ export default function LoginScreen() {
     if (emailError || passwordError) return;
 
     setLoading(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(sanitizeEmail(email), password);
     setLoading(false);
 
     if (error) {
