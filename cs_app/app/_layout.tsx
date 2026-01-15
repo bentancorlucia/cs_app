@@ -1,17 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
+import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import '../global.css';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider } from '@/src/context/AuthContext';
 import { AuthGuard } from '@/src/components/auth';
+import { AnimatedSplash } from '@/src/components/AnimatedSplash';
 import { ClubColors } from '@/constants/theme';
 import { supabase } from '@/src/lib/supabase';
+
+// Prevent the native splash screen from auto-hiding
+SplashScreen.preventAutoHideAsync();
 
 // Handle auth redirects from web browser
 WebBrowser.maybeCompleteAuthSession();
@@ -58,6 +63,16 @@ const parseHashParams = (url: string): Record<string, string> => {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [showSplash, setShowSplash] = useState(true);
+
+  const onSplashComplete = useCallback(() => {
+    setShowSplash(false);
+  }, []);
+
+  // Hide native splash when app is ready
+  useEffect(() => {
+    SplashScreen.hideAsync();
+  }, []);
 
   useEffect(() => {
     // Handle deep links when app is already open
@@ -115,6 +130,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ThemeProvider value={colorScheme === 'dark' ? ClubDarkTheme : ClubLightTheme}>
+        {showSplash && <AnimatedSplash onAnimationComplete={onSplashComplete} />}
         <AuthGuard>
           <Stack
             screenOptions={{
