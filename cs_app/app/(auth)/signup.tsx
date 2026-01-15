@@ -59,7 +59,10 @@ export default function SignupScreen() {
     }
 
     setVerificationStatus('verifying');
-    const { socio, error } = await verifyCedulaAgainstSocios(formatCedula(cedula));
+    const cedulaDigits = cedula.replace(/\D/g, '');
+    console.log('Verificando cédula:', cedulaDigits, 'longitud:', cedulaDigits.length);
+    const { socio, error } = await verifyCedulaAgainstSocios(cedulaDigits);
+    console.log('Resultado:', { socio, error });
 
     if (error) {
       setVerificationStatus('error');
@@ -107,7 +110,8 @@ export default function SignupScreen() {
       sanitizeEmail(email),
       password,
       sanitizeText(fullName, MAX_NAME_LENGTH),
-      phone.replace(/\D/g, '')
+      phone.replace(/\D/g, ''),
+      cedula.replace(/\D/g, '')
     );
     setLoading(false);
 
@@ -259,7 +263,7 @@ export default function SignupScreen() {
             <View style={styles.membershipHeader}>
               <Info size={18} color={ClubColors.secondary} />
               <Text style={styles.membershipInfo}>
-                Ingresá tu cédula para verificar tu membresía
+                Ingresá tu cédula (obligatorio) para verificar tu membresía
               </Text>
             </View>
 

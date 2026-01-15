@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { File } from 'expo-file-system';
 import { supabase } from '@/src/lib/supabase';
 import { Profile, UserRole } from '@/src/types/database';
+import { linkProfileToSocio } from '@/src/services/membershipService';
 
 interface AuthContextType {
   session: Session | null;
@@ -11,7 +12,7 @@ interface AuthContextType {
   userRole: UserRole | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, phone: string, cedula: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
@@ -121,12 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, phone: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (email: string, password: string, fullName: string, phone: string, cedula: string) => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, phone }
+        data: { full_name: fullName, phone, cedula_identidad: cedula }
       }
     });
 
@@ -136,6 +137,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Profile is created automatically by database trigger (handle_new_user)
+    // After signup, try to link profile with socio if cedula matches
+    if (data.user?.id && cedula) {
+      const linkResult = await linkProfileToSocio(data.user.id, cedula);
+      if (linkResult.success) {
+        console.log('Profile linked to socio:', linkResult.socio);
+      } else {
+        // User registered but not found as socio - they'll have 'no_socio' role
+        console.log('User registered as no_socio:', linkResult.message);
+      }
+    }
+
     return { error: null };
   };
 
