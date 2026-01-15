@@ -1,6 +1,5 @@
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { BlurView } from 'expo-blur';
-import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -12,9 +11,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ClubColors } from '@/constants/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-// Check if native glass effect is available (iOS 26+)
-const useNativeGlass = isLiquidGlassAvailable();
 
 interface TabButtonProps {
   onPress: () => void;
@@ -52,22 +48,10 @@ function TabButton({ onPress, onLongPress, icon }: TabButtonProps) {
 }
 
 function GlassContainer({ children }: { children: React.ReactNode }) {
-  if (useNativeGlass) {
-    // Use native iOS 26 liquid glass effect with maroon tint
-    return (
-      <GlassView
-        style={styles.glassContainer}
-        glassEffectStyle="regular"
-        tintColor="rgba(115, 13, 50, 0.6)"
-      >
-        {children}
-      </GlassView>
-    );
-  }
-
-  // Fallback for older iOS versions and Android
+  // Always use BlurView with dark tint for consistent appearance
+  // regardless of system light/dark mode
   return (
-    <BlurView intensity={60} tint="dark" style={styles.blurContainer}>
+    <BlurView intensity={80} tint="dark" style={styles.blurContainer}>
       <View style={styles.baseTint} />
       <View style={styles.innerBorder} />
       {children}
@@ -80,12 +64,9 @@ export function LiquidGlassTabBar({ state, descriptors, navigation }: BottomTabB
 
   return (
     <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-      {/* Shadow for depth (only on fallback, native glass has its own) */}
-      {!useNativeGlass && (
-        <View style={styles.shadowContainer}>
-          <View style={styles.shadow} />
-        </View>
-      )}
+      <View style={styles.shadowContainer}>
+        <View style={styles.shadow} />
+      </View>
 
       <GlassContainer>
         <View style={styles.tabsContainer}>
@@ -175,11 +156,6 @@ const styles = StyleSheet.create({
         elevation: 12,
       },
     }),
-  },
-  glassContainer: {
-    borderRadius: 32,
-    overflow: 'hidden',
-    marginBottom: 4,
   },
   blurContainer: {
     borderRadius: 32,
