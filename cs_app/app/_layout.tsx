@@ -177,6 +177,13 @@ export default function RootLayout() {
                 animationDuration: 300,
               }}
             />
+            <Stack.Screen
+              name="admin"
+              options={{
+                animation: 'slide_from_right',
+                animationDuration: 300,
+              }}
+            />
           </Stack>
         </AuthGuard>
         <StatusBar style="auto" />

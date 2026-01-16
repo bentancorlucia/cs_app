@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Settings, Clock, Calendar, User } from 'lucide-react-native';
+import { Settings, Clock, Calendar, User, Shield, ChevronRight } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/src/context/AuthContext';
-import { ClubColors, Glass } from '@/constants/theme';
+import { ClubColors, Glass, BorderRadius } from '@/constants/theme';
 import { useUserSquad, useUserStats } from '@/src/hooks/useData';
 
 // Emoji mapping for disciplines
@@ -30,7 +30,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function PerfilScreen() {
   const router = useRouter();
-  const { profile, userRole } = useAuth();
+  const { profile, userRole, isAdmin } = useAuth();
 
   // Get user's squad and stats
   const { squad, squadMember, loading: loadingSquad } = useUserSquad();
@@ -360,6 +360,79 @@ export default function PerfilScreen() {
             </View>
           </View>
         </Animated.View>
+
+        {/* Admin Section - Only visible for admins */}
+        {isAdmin && (
+          <Animated.View
+            entering={FadeInUp.duration(500).delay(400)}
+            style={{ paddingHorizontal: 20, marginTop: 24 }}
+          >
+            <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>
+              Administración
+            </Text>
+            <Pressable
+              onPress={() => router.push('/admin')}
+              style={({ pressed }) => ({
+                overflow: 'hidden',
+                borderRadius: BorderRadius.xl,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+              })}
+            >
+              <LinearGradient
+                colors={['rgba(115, 13, 50, 0.85)', 'rgba(90, 10, 39, 0.75)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  padding: 20,
+                  borderRadius: BorderRadius.xl,
+                  borderWidth: 1,
+                  borderColor: 'rgba(247, 182, 67, 0.5)',
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <View
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 16,
+                        backgroundColor: ClubColors.secondary,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 16,
+                      }}
+                    >
+                      <Shield size={28} color={ClubColors.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: ClubColors.secondary, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 }}>
+                        Acceso Exclusivo
+                      </Text>
+                      <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginTop: 4 }}>
+                        Panel de Administrador
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, marginTop: 4 }}>
+                        Gestionar socios, partidos y más
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 12,
+                      backgroundColor: 'rgba(247, 182, 67, 0.2)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <ChevronRight size={24} color={ClubColors.secondary} />
+                  </View>
+                </View>
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
+        )}
       </ScrollView>
     </View>
   );
