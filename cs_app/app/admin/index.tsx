@@ -411,7 +411,7 @@ export default function AdminMenuScreen() {
           locations={[0, 0.35, 0.5, 0.65, 0.8, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{ paddingHorizontal: 20, paddingTop: 60, paddingBottom: 60 }}
+          style={{ paddingHorizontal: 20, paddingTop: 90, paddingBottom: 60 }}
         >
           <Animated.View
             entering={FadeInDown.duration(500)}
@@ -458,17 +458,17 @@ export default function AdminMenuScreen() {
                   width: 8,
                   height: 8,
                   borderRadius: 4,
-                  backgroundColor: '#064e3b',
+                  backgroundColor: '#22c55e',
                 }}
               />
-              <Text style={{ color: '#064e3b', fontSize: 12, fontWeight: '600' }}>
+              <Text style={{ color: '#22c55e', fontSize: 12, fontWeight: '600' }}>
                 Sistema Activo
               </Text>
             </View>
             <View style={{ width: 1, height: 12, backgroundColor: 'rgba(115, 13, 50, 0.3)' }} />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Activity size={14} color={ClubColors.primary} />
-              <Text style={{ color: ClubColors.primary, fontSize: 12, opacity: 0.8 }}>
+              <Activity size={14} color="#9ca3af" />
+              <Text style={{ color: '#9ca3af', fontSize: 12, fontWeight: '600' }}>
                 Tiempo real
               </Text>
             </View>
