@@ -100,6 +100,25 @@ export interface Notification {
   sender?: Profile;
 }
 
+export interface UserNotification {
+  id: string;
+  notification_id: string;
+  user_id: string;
+  is_read: boolean;
+  read_at?: string;
+  created_at: string;
+}
+
+export interface Socio {
+  id: string;
+  cedula_identidad: string;
+  full_name: string;
+  email?: string;
+  membership_type: 'socio_social' | 'socio_deportivo';
+  membership_status: 'active' | 'inactive' | 'suspended';
+  created_at: string;
+}
+
 // Supabase Database type for client
 export interface Database {
   public: {
@@ -138,6 +157,16 @@ export interface Database {
         Row: Notification;
         Insert: Omit<Notification, 'id' | 'created_at'>;
         Update: Partial<Omit<Notification, 'id' | 'created_at'>>;
+      };
+      user_notifications: {
+        Row: UserNotification;
+        Insert: Omit<UserNotification, 'id' | 'created_at'>;
+        Update: Partial<Omit<UserNotification, 'id' | 'created_at'>>;
+      };
+      socios: {
+        Row: Socio;
+        Insert: Omit<Socio, 'id' | 'created_at'>;
+        Update: Partial<Omit<Socio, 'id' | 'created_at'>>;
       };
     };
   };

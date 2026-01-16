@@ -1,182 +1,28 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingUp, Minus, TrendingDown, Calendar, Swords } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInRight, FadeIn, FadeInUp } from 'react-native-reanimated';
 import { ClubColors, Glass } from '@/constants/theme';
 import { Match } from '@/src/types/database';
-import { Image } from 'react-native';
+import { useCompletedMatches, useDisciplines, useCategories, useClubInfo } from '@/src/hooks/useData';
 
-// Extended Match type with scores for completed matches
-interface CompletedMatch extends Match {
-  home_score: number;
-  away_score: number;
-  league?: string;
-}
-
-// Mock completed matches
-const mockResults: CompletedMatch[] = [
-  {
-    id: '1',
-    squad_id: 's1',
-    opponent_name: 'Defensor SC',
-    match_date: '2026-01-03',
-    match_time: '15:00',
-    location: 'Cancha Principal',
-    is_home: true,
-    home_score: 3,
-    away_score: 1,
-    status: 'completed',
-    league: 'Liga Metropolitana',
-    created_at: new Date().toISOString(),
-    squad: {
-      id: 's1',
-      discipline_id: 'd1',
-      name: 'Mayores',
-      category: 'Mayores',
-      is_active: true,
-      created_at: new Date().toISOString(),
-      discipline: {
-        id: 'd1',
-        name: 'Futbol',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-    },
-  },
-  {
-    id: '2',
-    squad_id: 's2',
-    opponent_name: 'Liverpool',
-    match_date: '2025-12-14',
-    match_time: '10:00',
-    location: 'Liverpool FC',
-    is_home: false,
-    home_score: 0,
-    away_score: 2,
-    status: 'completed',
-    league: 'Liga Juvenil',
-    created_at: new Date().toISOString(),
-    squad: {
-      id: 's2',
-      discipline_id: 'd1',
-      name: 'Sub-16',
-      category: 'Sub-16',
-      is_active: true,
-      created_at: new Date().toISOString(),
-      discipline: {
-        id: 'd1',
-        name: 'Futbol',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-    },
-  },
-  {
-    id: '3',
-    squad_id: 's3',
-    opponent_name: 'Trouville',
-    match_date: '2025-11-24',
-    match_time: '18:00',
-    location: 'Club Trouville',
-    is_home: false,
-    home_score: 1,
-    away_score: 1,
-    status: 'completed',
-    league: 'Liga Metropolitana',
-    created_at: new Date().toISOString(),
-    squad: {
-      id: 's3',
-      discipline_id: 'd1',
-      name: 'Mayores',
-      category: 'Mayores',
-      is_active: true,
-      created_at: new Date().toISOString(),
-      discipline: {
-        id: 'd1',
-        name: 'Futbol',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-    },
-  },
-  {
-    id: '4',
-    squad_id: 's4',
-    opponent_name: 'Aguada',
-    match_date: '2025-12-20',
-    match_time: '19:00',
-    location: 'Cancha Club Seminario',
-    is_home: true,
-    home_score: 78,
-    away_score: 72,
-    status: 'completed',
-    league: 'Liga Metropolitana',
-    created_at: new Date().toISOString(),
-    squad: {
-      id: 's4',
-      discipline_id: 'd2',
-      name: 'Mayores',
-      category: 'Mayores',
-      is_active: true,
-      created_at: new Date().toISOString(),
-      discipline: {
-        id: 'd2',
-        name: 'Basquetbol',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-    },
-  },
-  {
-    id: '5',
-    squad_id: 's5',
-    opponent_name: 'Carrasco Polo',
-    match_date: '2025-12-10',
-    match_time: '16:00',
-    location: 'Carrasco Polo Club',
-    is_home: false,
-    home_score: 17,
-    away_score: 24,
-    status: 'completed',
-    league: 'Torneo Apertura',
-    created_at: new Date().toISOString(),
-    squad: {
-      id: 's5',
-      discipline_id: 'd3',
-      name: 'Mayores',
-      category: 'Mayores',
-      is_active: true,
-      created_at: new Date().toISOString(),
-      discipline: {
-        id: 'd3',
-        name: 'Rugby',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-    },
-  },
-];
-
-const disciplines = [
-  { id: 'all', name: 'Todos', emoji: null },
-  { id: 'd1', name: 'Futbol', emoji: '\u26bd' },
-  { id: 'd2', name: 'Basquetbol', emoji: '\ud83c\udfc0' },
-  { id: 'd3', name: 'Rugby', emoji: '\ud83c\udfc9' },
-  { id: 'd4', name: 'Handball', emoji: '\ud83e\udd3e' },
-];
-
-const categories = ['Todas', 'Sub-12', 'Sub-14', 'Sub-16', 'Sub-18', 'Mayores'];
+// Emoji mapping for disciplines
+const disciplineEmojis: Record<string, string> = {
+  'Futbol': '\u26bd',
+  'Fútbol': '\u26bd',
+  'Basquetbol': '\ud83c\udfc0',
+  'Básquetbol': '\ud83c\udfc0',
+  'Basquet': '\ud83c\udfc0',
+  'Rugby': '\ud83c\udfc9',
+  'Handball': '\ud83e\udd3e',
+  'Hockey': '\ud83c\udfd1',
+  'Voleibol': '\ud83c\udfd0',
+  'Voley': '\ud83c\udfd0',
+};
 
 const getSportEmoji = (disciplineName: string) => {
-  const map: Record<string, string> = {
-    'Futbol': '\u26bd',
-    'Basquetbol': '\ud83c\udfc0',
-    'Basquet': '\ud83c\udfc0',
-    'Rugby': '\ud83c\udfc9',
-    'Handball': '\ud83e\udd3e',
-  };
-  return map[disciplineName] || '\u26bd';
+  return disciplineEmojis[disciplineName] || '\u26bd';
 };
 
 const formatMatchDate = (dateStr: string) => {
@@ -185,7 +31,9 @@ const formatMatchDate = (dateStr: string) => {
   return `${days[date.getDay()]} ${date.getDate()}/${date.getMonth() + 1}`;
 };
 
-const getMatchResult = (match: CompletedMatch): 'win' | 'draw' | 'loss' => {
+const getMatchResult = (match: Match): 'win' | 'draw' | 'loss' => {
+  if (match.home_score === undefined || match.away_score === undefined) return 'draw';
+
   const clubScore = match.is_home ? match.home_score : match.away_score;
   const opponentScore = match.is_home ? match.away_score : match.home_score;
 
@@ -200,23 +48,55 @@ export default function ResultadosScreen() {
   const [selectedDiscipline, setSelectedDiscipline] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('Todas');
 
-  const filteredResults = mockResults.filter((match) => {
-    const disciplineMatch = selectedDiscipline === 'all' || match.squad?.discipline_id === selectedDiscipline;
-    const categoryMatch = selectedCategory === 'Todas' || match.squad?.category === selectedCategory;
-    return disciplineMatch && categoryMatch;
-  });
+  // Fetch data from database
+  const { matches, loading: loadingMatches } = useCompletedMatches();
+  const { disciplines, loading: loadingDisciplines } = useDisciplines();
+  const { categories, loading: loadingCategories } = useCategories(selectedDiscipline);
+  const clubInfo = useClubInfo();
+
+  // Reset category when discipline changes and selected category is no longer available
+  useMemo(() => {
+    if (selectedCategory !== 'Todas' && !categories.includes(selectedCategory)) {
+      setSelectedCategory('Todas');
+    }
+  }, [categories, selectedCategory]);
+
+  // Build discipline filter options
+  const disciplineOptions = useMemo(() => {
+    const options = [{ id: 'all', name: 'Todos', emoji: null as string | null }];
+    disciplines.forEach(d => {
+      options.push({
+        id: d.id,
+        name: d.name,
+        emoji: getSportEmoji(d.name),
+      });
+    });
+    return options;
+  }, [disciplines]);
+
+  // Filter matches based on selected filters
+  const filteredResults = useMemo(() => {
+    return matches.filter((match) => {
+      const disciplineMatch = selectedDiscipline === 'all' || match.squad?.discipline_id === selectedDiscipline;
+      const categoryMatch = selectedCategory === 'Todas' ||
+        match.squad?.category?.toLowerCase() === selectedCategory.toLowerCase();
+      return disciplineMatch && categoryMatch;
+    });
+  }, [matches, selectedDiscipline, selectedCategory]);
 
   // Calculate stats for filtered results
-  const stats = filteredResults.reduce(
-    (acc, match) => {
-      const result = getMatchResult(match);
-      if (result === 'win') acc.wins++;
-      else if (result === 'draw') acc.draws++;
-      else acc.losses++;
-      return acc;
-    },
-    { wins: 0, draws: 0, losses: 0 }
-  );
+  const stats = useMemo(() => {
+    return filteredResults.reduce(
+      (acc, match) => {
+        const result = getMatchResult(match);
+        if (result === 'win') acc.wins++;
+        else if (result === 'draw') acc.draws++;
+        else acc.losses++;
+        return acc;
+      },
+      { wins: 0, draws: 0, losses: 0 }
+    );
+  }, [filteredResults]);
 
   return (
     <View style={{ flex: 1, backgroundColor: ClubColors.background }}>
@@ -304,94 +184,108 @@ export default function ResultadosScreen() {
             contentContainerStyle={{ paddingHorizontal: 20 }}
             style={{ marginBottom: 12 }}
           >
-            {disciplines.map((discipline, index) => (
-              <AnimatedPressable
-                key={discipline.id}
-                entering={FadeIn.duration(300).delay(250 + index * 50)}
-                style={{ marginRight: 12 }}
-                onPress={() => setSelectedDiscipline(discipline.id)}
-              >
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    backgroundColor: selectedDiscipline === discipline.id
-                      ? ClubColors.secondary
-                      : ClubColors.surface,
-                    borderRadius: 14,
-                    borderWidth: 1,
-                    borderColor: selectedDiscipline === discipline.id
-                      ? ClubColors.secondary
-                      : Glass.border,
-                  }}
+            {loadingDisciplines ? (
+              <ActivityIndicator size="small" color={ClubColors.secondary} />
+            ) : (
+              disciplineOptions.map((discipline, index) => (
+                <AnimatedPressable
+                  key={discipline.id}
+                  entering={FadeIn.duration(300).delay(250 + index * 50)}
+                  style={{ marginRight: 12 }}
+                  onPress={() => setSelectedDiscipline(discipline.id)}
                 >
-                  {discipline.emoji && (
-                    <Text style={{ marginRight: 8, fontSize: 16 }}>{discipline.emoji}</Text>
-                  )}
-                  <Text
+                  <View
                     style={{
-                      fontWeight: '600',
-                      color: selectedDiscipline === discipline.id
-                        ? ClubColors.primary
-                        : 'white',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 16,
+                      paddingVertical: 10,
+                      backgroundColor: selectedDiscipline === discipline.id
+                        ? ClubColors.secondary
+                        : ClubColors.surface,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: selectedDiscipline === discipline.id
+                        ? ClubColors.secondary
+                        : Glass.border,
                     }}
                   >
-                    {discipline.name}
-                  </Text>
-                </View>
-              </AnimatedPressable>
-            ))}
+                    {discipline.emoji && (
+                      <Text style={{ marginRight: 8, fontSize: 16 }}>{discipline.emoji}</Text>
+                    )}
+                    <Text
+                      style={{
+                        fontWeight: '600',
+                        color: selectedDiscipline === discipline.id
+                          ? ClubColors.primary
+                          : 'white',
+                      }}
+                    >
+                      {discipline.name}
+                    </Text>
+                  </View>
+                </AnimatedPressable>
+              ))
+            )}
           </ScrollView>
 
-          {/* Category Filter */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-          >
-            {categories.map((category, index) => (
-              <AnimatedPressable
-                key={category}
-                entering={FadeIn.duration(300).delay(300 + index * 30)}
-                style={{ marginRight: 8 }}
-                onPress={() => setSelectedCategory(category)}
-              >
-                <View
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    backgroundColor: selectedCategory === category
-                      ? ClubColors.primary
-                      : 'transparent',
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: selectedCategory === category
-                      ? ClubColors.primary
-                      : Glass.border,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: selectedCategory === category
-                        ? 'white'
-                        : ClubColors.muted,
-                    }}
+          {/* Category Filter - only show when a specific discipline is selected and has multiple categories */}
+          {selectedDiscipline !== 'all' && categories.length > 1 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20 }}
+            >
+              {loadingCategories ? (
+                <ActivityIndicator size="small" color={ClubColors.secondary} />
+              ) : (
+                ['Todas', ...categories].map((category, index) => (
+                  <AnimatedPressable
+                    key={category}
+                    entering={FadeIn.duration(300).delay(300 + index * 30)}
+                    style={{ marginRight: 8 }}
+                    onPress={() => setSelectedCategory(category)}
                   >
-                    {category}
-                  </Text>
-                </View>
-              </AnimatedPressable>
-            ))}
-          </ScrollView>
+                    <View
+                      style={{
+                        paddingHorizontal: 16,
+                        paddingVertical: 8,
+                        backgroundColor: selectedCategory === category
+                          ? ClubColors.primary
+                          : 'transparent',
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: selectedCategory === category
+                          ? ClubColors.primary
+                          : Glass.border,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: '500',
+                          color: selectedCategory === category
+                            ? 'white'
+                            : ClubColors.muted,
+                        }}
+                      >
+                        {category}
+                      </Text>
+                    </View>
+                  </AnimatedPressable>
+                ))
+              )}
+            </ScrollView>
+          )}
         </Animated.View>
 
         {/* Results List */}
         <View style={{ paddingHorizontal: 20 }}>
-          {filteredResults.length === 0 ? (
+          {loadingMatches ? (
+            <View style={{ padding: 64, alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={ClubColors.secondary} />
+            </View>
+          ) : filteredResults.length === 0 ? (
             <Animated.View
               entering={FadeIn.duration(400)}
               style={{ alignItems: 'center', paddingVertical: 64 }}
@@ -499,7 +393,7 @@ export default function ResultadosScreen() {
                             </View>
                             <View style={{ flex: 1 }}>
                               <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }} numberOfLines={1}>
-                                Club Seminario
+                                {clubInfo.name}
                               </Text>
                             </View>
                           </View>
@@ -514,7 +408,7 @@ export default function ResultadosScreen() {
                             }}
                           >
                             <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>
-                              {clubScore} - {opponentScore}
+                              {clubScore ?? '-'} - {opponentScore ?? '-'}
                             </Text>
                           </View>
 
@@ -539,7 +433,7 @@ export default function ResultadosScreen() {
                           </View>
                         </View>
 
-                        {/* League and Location */}
+                        {/* Location */}
                         <View
                           style={{
                             flexDirection: 'row',
@@ -552,7 +446,7 @@ export default function ResultadosScreen() {
                           }}
                         >
                           <Text style={{ color: ClubColors.muted, fontSize: 12, fontWeight: '500' }}>
-                            {match.league}
+                            {match.location}
                           </Text>
                           <View
                             style={{

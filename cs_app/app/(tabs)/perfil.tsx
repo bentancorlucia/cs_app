@@ -1,31 +1,29 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Settings, Trophy, Clock, Target, Users, Calendar, User } from 'lucide-react-native';
+import { Settings, Clock, Calendar, User } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/src/context/AuthContext';
 import { ClubColors, Glass } from '@/constants/theme';
+import { useUserSquad, useUserStats } from '@/src/hooks/useData';
 
-// Mock profile data
-const mockProfile = {
-  name: 'Juan Seminario',
-  email: 'juan@seminario.com',
-  avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-  memberSince: 'Marzo 2022',
-  sport: 'Futbol',
-  division: 'Primera Division',
-  category: 'Mayores',
-  position: 'Mediocampista',
-  jerseyNumber: 7,
+// Emoji mapping for disciplines
+const disciplineEmojis: Record<string, string> = {
+  'Futbol': '\u26bd',
+  'Fútbol': '\u26bd',
+  'Basquetbol': '\ud83c\udfc0',
+  'Básquetbol': '\ud83c\udfc0',
+  'Basquet': '\ud83c\udfc0',
+  'Rugby': '\ud83c\udfc9',
+  'Handball': '\ud83e\udd3e',
+  'Hockey': '\ud83c\udfd1',
+  'Voleibol': '\ud83c\udfd0',
+  'Voley': '\ud83c\udfd0',
 };
 
-// Mock stats
-const mockStats = {
-  goals: 12,
-  assists: 8,
-  trophies: 3,
-  attendance: 92,
+const getSportEmoji = (disciplineName: string) => {
+  return disciplineEmojis[disciplineName] || '\u26bd';
 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -34,6 +32,10 @@ export default function PerfilScreen() {
   const router = useRouter();
   const { profile, userRole } = useAuth();
 
+  // Get user's squad and stats
+  const { squad, squadMember, loading: loadingSquad } = useUserSquad();
+  const { stats, loading: loadingStats } = useUserStats();
+
   const roleLabels: Record<string, string> = {
     socio_social: 'Socio Social',
     socio_deportivo: 'Socio Deportivo',
@@ -41,6 +43,15 @@ export default function PerfilScreen() {
     dt: 'Director Técnico',
     delegado: 'Delegado',
     admin: 'Administrador',
+  };
+
+  // Format date for "member since"
+  const formatMemberSince = (dateStr?: string) => {
+    if (!dateStr) return 'Fecha no disponible';
+    const date = new Date(dateStr);
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return `${months[date.getMonth()]} ${date.getFullYear()}`;
   };
 
   return (
@@ -121,10 +132,10 @@ export default function PerfilScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>
-                  {profile?.full_name ?? mockProfile.name}
+                  {profile?.full_name || 'Usuario'}
                 </Text>
                 <Text style={{ color: ClubColors.muted, fontSize: 14, marginTop: 2 }}>
-                  {profile?.email ?? mockProfile.email}
+                  {profile?.email || ''}
                 </Text>
                 <View
                   style={{
@@ -145,7 +156,7 @@ export default function PerfilScreen() {
                       color: ClubColors.primary,
                     }}
                   >
-                    {roleLabels[userRole ?? 'socio_deportivo'] ?? 'Socio Deportivo'}
+                    {roleLabels[userRole ?? 'no_socio'] ?? 'Miembro'}
                   </Text>
                 </View>
               </View>
@@ -163,95 +174,128 @@ export default function PerfilScreen() {
             >
               <Calendar size={16} color={ClubColors.muted} />
               <Text style={{ color: ClubColors.muted, fontSize: 14, marginLeft: 8 }}>
-                Socio desde {mockProfile.memberSince}
+                Socio desde {formatMemberSince(profile?.created_at)}
               </Text>
             </View>
           </View>
         </Animated.View>
 
         {/* Sport Info Card */}
-        <Animated.View
-          entering={FadeInUp.duration(500).delay(200)}
-          style={{ paddingHorizontal: 20 }}
-        >
-          <View
-            style={{
-              padding: 20,
-              backgroundColor: ClubColors.surface,
-              borderRadius: 24,
-              borderWidth: 1,
-              borderColor: Glass.border,
-            }}
+        {loadingSquad ? (
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={ClubColors.secondary} />
+          </View>
+        ) : squad ? (
+          <Animated.View
+            entering={FadeInUp.duration(500).delay(200)}
+            style={{ paddingHorizontal: 20 }}
           >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 14,
-                    backgroundColor: 'rgba(255,255,255,0.08)',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: 12,
-                  }}
-                >
-                  <Text style={{ fontSize: 24 }}>{'\u26bd'}</Text>
-                </View>
-                <View>
-                  <Text style={{ color: ClubColors.secondary, fontWeight: 'bold', fontSize: 20 }}>
-                    {mockProfile.sport}
-                  </Text>
-                  <Text style={{ color: ClubColors.muted, fontSize: 14, marginTop: 2 }}>
-                    {mockProfile.division}
-                  </Text>
-                </View>
-              </View>
-              <View
-                style={{
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  backgroundColor: ClubColors.secondary,
-                  borderRadius: 14,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 30,
-                    fontWeight: 'bold',
-                    color: ClubColors.primary,
-                  }}
-                >
-                  #{mockProfile.jerseyNumber}
-                </Text>
-              </View>
-            </View>
-
             <View
               style={{
-                flexDirection: 'row',
-                marginTop: 20,
-                paddingTop: 20,
-                gap: 32,
-                borderTopWidth: 1,
-                borderTopColor: Glass.border,
+                padding: 20,
+                backgroundColor: ClubColors.surface,
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: Glass.border,
               }}
             >
-              <View>
-                <Text style={{ color: ClubColors.muted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  Categoría
-                </Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16, marginTop: 4 }}>{mockProfile.category}</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 14,
+                      backgroundColor: 'rgba(255,255,255,0.08)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 12,
+                    }}
+                  >
+                    <Text style={{ fontSize: 24 }}>{getSportEmoji(squad.discipline?.name || '')}</Text>
+                  </View>
+                  <View>
+                    <Text style={{ color: ClubColors.secondary, fontWeight: 'bold', fontSize: 20 }}>
+                      {squad.discipline?.name || 'Deporte'}
+                    </Text>
+                    <Text style={{ color: ClubColors.muted, fontSize: 14, marginTop: 2 }}>
+                      {squad.name}
+                    </Text>
+                  </View>
+                </View>
+                {squadMember?.jersey_number && (
+                  <View
+                    style={{
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      backgroundColor: ClubColors.secondary,
+                      borderRadius: 14,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 30,
+                        fontWeight: 'bold',
+                        color: ClubColors.primary,
+                      }}
+                    >
+                      #{squadMember.jersey_number}
+                    </Text>
+                  </View>
+                )}
               </View>
-              <View>
-                <Text style={{ color: ClubColors.muted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  Posición
-                </Text>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16, marginTop: 4 }}>{mockProfile.position}</Text>
+
+              <View
+                style={{
+                  flexDirection: 'row',
+                  marginTop: 20,
+                  paddingTop: 20,
+                  gap: 32,
+                  borderTopWidth: 1,
+                  borderTopColor: Glass.border,
+                }}
+              >
+                <View>
+                  <Text style={{ color: ClubColors.muted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Categoría
+                  </Text>
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16, marginTop: 4 }}>
+                    {squad.category || 'Sin categoría'}
+                  </Text>
+                </View>
+                <View>
+                  <Text style={{ color: ClubColors.muted, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Posición
+                  </Text>
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16, marginTop: 4 }}>
+                    {squadMember?.position || 'Sin posición'}
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
-        </Animated.View>
+          </Animated.View>
+        ) : (
+          <Animated.View
+            entering={FadeInUp.duration(500).delay(200)}
+            style={{ paddingHorizontal: 20 }}
+          >
+            <View
+              style={{
+                padding: 32,
+                backgroundColor: ClubColors.surface,
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: Glass.border,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 40, marginBottom: 12 }}>{'\u26bd'}</Text>
+              <Text style={{ color: ClubColors.muted, textAlign: 'center' }}>
+                No estás asignado a ningún equipo
+              </Text>
+            </View>
+          </Animated.View>
+        )}
 
         {/* Stats Section */}
         <Animated.View
@@ -259,7 +303,6 @@ export default function PerfilScreen() {
           style={{ paddingHorizontal: 20, marginTop: 24 }}
         >
           <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Mis Estadísticas</Text>
-          
 
           <View style={{ flexDirection: 'row', marginTop: 12, gap: 12 }}>
             <View
@@ -284,26 +327,36 @@ export default function PerfilScreen() {
               >
                 <Clock size={22} color="#3b82f6" />
               </View>
-              <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 12 }}>{mockStats.attendance}%</Text>
-              <Text style={{ color: ClubColors.muted, fontSize: 14, fontWeight: '500', marginBottom: 12 }}>Asistencia</Text>
-              {/* Progress Bar */}
-              <View
-                style={{
-                  height: 8,
-                  backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                  borderRadius: 4,
-                  overflow: 'hidden',
-                }}
-              >
-                <View
-                  style={{
-                    width: `${mockStats.attendance}%`,
-                    height: '100%',
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 4,
-                  }}
-                />
-              </View>
+              {loadingStats ? (
+                <ActivityIndicator size="small" color="#3b82f6" style={{ marginTop: 12 }} />
+              ) : (
+                <>
+                  <Text style={{ fontSize: 32, fontWeight: 'bold', color: 'white', marginTop: 12 }}>
+                    {stats.attendancePercentage}%
+                  </Text>
+                  <Text style={{ color: ClubColors.muted, fontSize: 14, fontWeight: '500', marginBottom: 12 }}>
+                    Asistencia
+                  </Text>
+                  {/* Progress Bar */}
+                  <View
+                    style={{
+                      height: 8,
+                      backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                      borderRadius: 4,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: `${stats.attendancePercentage}%`,
+                        height: '100%',
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4,
+                      }}
+                    />
+                  </View>
+                </>
+              )}
             </View>
           </View>
         </Animated.View>

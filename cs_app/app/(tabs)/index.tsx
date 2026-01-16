@@ -6,6 +6,7 @@ import {
   Pressable,
   Image,
   useWindowDimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,106 +26,37 @@ import Animated, {
   FadeInUp,
 } from 'react-native-reanimated';
 import { ClubColors, Glass } from '@/constants/theme';
-import { Match } from '@/src/types/database';
 import { useAuth } from '@/src/context/AuthContext';
+import {
+  useDisciplines,
+  useUpcomingMatches,
+  useUserStats,
+  useClubInfo,
+} from '@/src/hooks/useData';
 
 // Club logo
 const clubLogo = require('@/assets/images/logo-cs.png');
 
-// Mock user data
-const mockUser = {
-  name: 'Juan',
-  avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+// Emoji mapping for disciplines
+const disciplineEmojis: Record<string, string> = {
+  'Futbol': '\u26bd',
+  'Fútbol': '\u26bd',
+  'Basquetbol': '\ud83c\udfc0',
+  'Básquetbol': '\ud83c\udfc0',
+  'Basquet': '\ud83c\udfc0',
+  'Rugby': '\ud83c\udfc9',
+  'Handball': '\ud83e\udd3e',
+  'Hockey': '\ud83c\udfd1',
+  'Voleibol': '\ud83c\udfd0',
+  'Voley': '\ud83c\udfd0',
+  'Corredores': '\uD83C\uDFC3',
+  'Natacion': '\ud83c\udfca',
+  'Natación': '\ud83c\udfca',
+  'Tenis': '\ud83c\udfbe',
 };
-
-// Mock club data
-const mockClub = {
-  name: 'Club Seminario',
-  since: 2010,
-  location: 'Montevideo',
-  memberType: 'Socio Deportivo',
-};
-
-// Mock statistics
-const mockStats = {
-  goals: 12,
-  assists: 8,
-  matches: 18,
-  attendance: 88,
-};
-
-// Mock disciplines/sports
-const mockDisciplines = [
-  { id: '1', name: 'Futbol', emoji: '\u26bd' },
-  { id: '2', name: 'Basquetbol', emoji: '\ud83c\udfc0' },
-  { id: '3', name: 'Rugby', emoji: '\ud83c\udfc9' },
-  { id: '4', name: 'Handball', emoji: '\ud83e\udd3e' },
-  { id: '5', name: 'Hockey', emoji: '\ud83c\udfd1' },
-  { id: '6', name: 'Voleibol', emoji: '\ud83c\udfd0' },
-  { id: '7', name: 'Corredores', emoji: '\uD83C\uDFC3' },
-];
-
-// Mock upcoming matches
-const mockMatches: Match[] = [
-  {
-    id: '1',
-    squad_id: 's1',
-    opponent_name: 'Club Nacional',
-    match_date: '2026-01-10',
-    match_time: '15:00',
-    location: 'Cancha Principal',
-    is_home: true,
-    status: 'scheduled',
-    created_at: new Date().toISOString(),
-    squad: {
-      id: 's1',
-      discipline_id: 'd1',
-      name: 'Primera',
-      category: 'mayores',
-      is_active: true,
-      created_at: new Date().toISOString(),
-      discipline: {
-        id: 'd1',
-        name: 'Futbol',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-    },
-  },
-  {
-    id: '2',
-    squad_id: 's2',
-    opponent_name: 'Aguada',
-    match_date: '2026-01-11',
-    match_time: '19:30',
-    location: 'Estadio Aguada',
-    is_home: false,
-    status: 'scheduled',
-    created_at: new Date().toISOString(),
-    squad: {
-      id: 's2',
-      discipline_id: 'd2',
-      name: 'Sub-18',
-      category: 'sub-18',
-      is_active: true,
-      created_at: new Date().toISOString(),
-      discipline: {
-        id: 'd2',
-        name: 'Basquetbol',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-    },
-  },
-];
 
 const getSportEmoji = (disciplineName: string) => {
-  const map: Record<string, string> = {
-    'Futbol': '\u26bd',
-    'Basquetbol': '\ud83c\udfc0',
-    'Basquet': '\ud83c\udfc0',
-  };
-  return map[disciplineName] || '\u26bd';
+  return disciplineEmojis[disciplineName] || '\u26bd';
 };
 
 const formatMatchDate = (dateStr: string) => {
@@ -136,10 +68,26 @@ const formatMatchDate = (dateStr: string) => {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+// Role labels for membership type display
+const roleLabels: Record<string, string> = {
+  socio_social: 'Socio Social',
+  socio_deportivo: 'Socio Deportivo',
+  no_socio: 'No Socio',
+  dt: 'Director Técnico',
+  delegado: 'Delegado',
+  admin: 'Administrador',
+};
+
 export default function HomeScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const { profile } = useAuth();
+  const { profile, userRole } = useAuth();
+
+  // Fetch data from database
+  const { disciplines, loading: loadingDisciplines } = useDisciplines();
+  const { matches, loading: loadingMatches } = useUpcomingMatches(2);
+  const { stats, loading: loadingStats } = useUserStats();
+  const clubInfo = useClubInfo();
 
   return (
     <View style={{ flex: 1, backgroundColor: ClubColors.background }}>
@@ -166,7 +114,7 @@ export default function HomeScreen() {
                 Hola,
               </Text>
               <Text className="text-white text-4xl font-bold tracking-tight">
-                {profile?.full_name?.split(' ')[0] || mockUser.name}
+                {profile?.full_name?.split(' ')[0] || 'Usuario'}
               </Text>
             </View>
             <Pressable
@@ -233,10 +181,10 @@ export default function HomeScreen() {
                     className="text-xl font-bold"
                     style={{ color: ClubColors.secondary }}
                   >
-                    {mockClub.name}
+                    {clubInfo.name}
                   </Text>
                   <Text style={{ color: ClubColors.muted }} className="text-sm mt-1">
-                    Desde {mockClub.since} · {mockClub.location}
+                    Desde {clubInfo.since} · {clubInfo.location}
                   </Text>
                   <View
                     className="mt-3 px-3 py-1.5 self-start"
@@ -249,7 +197,7 @@ export default function HomeScreen() {
                       className="text-xs font-semibold"
                       style={{ color: ClubColors.secondary }}
                     >
-                      {mockClub.memberType}
+                      {roleLabels[userRole ?? 'no_socio'] ?? 'Miembro'}
                     </Text>
                   </View>
                 </View>
@@ -343,96 +291,118 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          {mockMatches.map((match, index) => (
-            <Animated.View
-              key={match.id}
-              entering={FadeInRight.duration(400).delay(500 + index * 100)}
+          {loadingMatches ? (
+            <View style={{ padding: 40, alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={ClubColors.secondary} />
+            </View>
+          ) : matches.length === 0 ? (
+            <View
+              style={{
+                padding: 32,
+                backgroundColor: ClubColors.surface,
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: Glass.border,
+                alignItems: 'center',
+              }}
             >
-              <Pressable style={{ marginBottom: 16 }}>
-                <View
-                  className="p-5"
-                  style={{
-                    backgroundColor: ClubColors.surface,
-                    borderRadius: 24,
-                    borderWidth: 1,
-                    borderColor: Glass.border,
-                  }}
-                >
-                  <View className="flex-row justify-between items-start">
-                    <View className="flex-row items-center">
+              <Calendar size={40} color={ClubColors.muted} />
+              <Text style={{ color: ClubColors.muted, marginTop: 12, textAlign: 'center' }}>
+                No hay partidos programados
+              </Text>
+            </View>
+          ) : (
+            matches.map((match, index) => (
+              <Animated.View
+                key={match.id}
+                entering={FadeInRight.duration(400).delay(500 + index * 100)}
+              >
+                <Pressable style={{ marginBottom: 16 }}>
+                  <View
+                    className="p-5"
+                    style={{
+                      backgroundColor: ClubColors.surface,
+                      borderRadius: 24,
+                      borderWidth: 1,
+                      borderColor: Glass.border,
+                    }}
+                  >
+                    <View className="flex-row justify-between items-start">
+                      <View className="flex-row items-center">
+                        <View
+                          className="items-center justify-center mr-3"
+                          style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 14,
+                            backgroundColor: 'rgba(255,255,255,0.08)',
+                          }}
+                        >
+                          <Text className="text-2xl">
+                            {getSportEmoji(match.squad?.discipline?.name || '')}
+                          </Text>
+                        </View>
+                        <View>
+                          <Text className="text-white font-bold text-base">
+                            {match.squad?.discipline?.name}
+                          </Text>
+                          <Text style={{ color: ClubColors.muted }} className="text-xs">
+                            {match.squad?.category}
+                          </Text>
+                        </View>
+                      </View>
                       <View
-                        className="items-center justify-center mr-3"
+                        className="px-3 py-1.5"
                         style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 14,
-                          backgroundColor: 'rgba(255,255,255,0.08)',
+                          backgroundColor: match.is_home ? 'rgba(59,130,246,0.2)' : 'rgba(107,114,128,0.2)',
+                          borderRadius: 12,
                         }}
                       >
-                        <Text className="text-2xl">
-                          {getSportEmoji(match.squad?.discipline?.name || '')}
-                        </Text>
-                      </View>
-                      <View>
-                        <Text className="text-white font-bold text-base">
-                          {match.squad?.discipline?.name}
-                        </Text>
-                        <Text style={{ color: ClubColors.muted }} className="text-xs">
-                          {match.squad?.category}
+                        <Text
+                          className="text-xs font-bold"
+                          style={{ color: match.is_home ? '#60a5fa' : '#9ca3af' }}
+                        >
+                          {match.is_home ? 'LOCAL' : 'VISITA'}
                         </Text>
                       </View>
                     </View>
+
+                    <View className="mt-4">
+                      <Text className="text-white font-semibold text-base">{clubInfo.name}</Text>
+                      <Text style={{ color: ClubColors.secondary }} className="font-bold text-sm my-1">
+                        vs
+                      </Text>
+                      <Text className="text-white font-semibold text-base">{match.opponent_name}</Text>
+                    </View>
+
                     <View
-                      className="px-3 py-1.5"
-                      style={{
-                        backgroundColor: match.is_home ? 'rgba(59,130,246,0.2)' : 'rgba(107,114,128,0.2)',
-                        borderRadius: 12,
-                      }}
+                      className="flex-row mt-4 pt-4 flex-wrap"
+                      style={{ gap: 16, borderTopWidth: 1, borderTopColor: Glass.border }}
                     >
-                      <Text
-                        className="text-xs font-bold"
-                        style={{ color: match.is_home ? '#60a5fa' : '#9ca3af' }}
-                      >
-                        {match.is_home ? 'LOCAL' : 'VISITA'}
-                      </Text>
+                      <View className="flex-row items-center">
+                        <Calendar size={14} color={ClubColors.muted} />
+                        <Text style={{ color: ClubColors.muted }} className="text-sm ml-2">
+                          {formatMatchDate(match.match_date)}
+                        </Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <Clock size={14} color={ClubColors.muted} />
+                        <Text style={{ color: ClubColors.muted }} className="text-sm ml-2">
+                          {match.match_time}
+                        </Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <MapPin size={14} color={ClubColors.muted} />
+                        <Text style={{ color: ClubColors.muted }} className="text-sm ml-2">
+                          {match.location}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-
-                  <View className="mt-4">
-                    <Text className="text-white font-semibold text-base">{mockClub.name}</Text>
-                    <Text style={{ color: ClubColors.secondary }} className="font-bold text-sm my-1">
-                      vs
-                    </Text>
-                    <Text className="text-white font-semibold text-base">{match.opponent_name}</Text>
-                  </View>
-
-                  <View
-                    className="flex-row mt-4 pt-4 flex-wrap"
-                    style={{ gap: 16, borderTopWidth: 1, borderTopColor: Glass.border }}
-                  >
-                    <View className="flex-row items-center">
-                      <Calendar size={14} color={ClubColors.muted} />
-                      <Text style={{ color: ClubColors.muted }} className="text-sm ml-2">
-                        {formatMatchDate(match.match_date)}
-                      </Text>
-                    </View>
-                    <View className="flex-row items-center">
-                      <Clock size={14} color={ClubColors.muted} />
-                      <Text style={{ color: ClubColors.muted }} className="text-sm ml-2">
-                        {match.match_time}
-                      </Text>
-                    </View>
-                    <View className="flex-row items-center">
-                      <MapPin size={14} color={ClubColors.muted} />
-                      <Text style={{ color: ClubColors.muted }} className="text-sm ml-2">
-                        {match.location}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </Pressable>
-            </Animated.View>
-          ))}
+                </Pressable>
+              </Animated.View>
+            ))
+          )}
         </Animated.View>
 
         {/* Stats Section */}
@@ -450,26 +420,34 @@ export default function HomeScreen() {
               borderColor: Glass.border,
             }}
           >
-            <View className="flex-row justify-between">
-              {[
-                { value: mockStats.goals, label: 'Goles' },
-                { value: mockStats.assists, label: 'Asistencias' },
-                { value: mockStats.matches, label: 'Partidos' },
-                { value: `${mockStats.attendance}%`, label: 'Asistencia' },
-              ].map((stat) => (
-                <View key={stat.label} className="items-center flex-1">
+            {loadingStats ? (
+              <ActivityIndicator size="small" color={ClubColors.secondary} />
+            ) : (
+              <View className="flex-row justify-around">
+                <View className="items-center flex-1">
                   <Text
                     style={{ color: ClubColors.secondary }}
                     className="text-3xl font-bold"
                   >
-                    {stat.value}
+                    {stats.matchesPlayed}
                   </Text>
                   <Text style={{ color: ClubColors.muted }} className="text-xs mt-1">
-                    {stat.label}
+                    Partidos
                   </Text>
                 </View>
-              ))}
-            </View>
+                <View className="items-center flex-1">
+                  <Text
+                    style={{ color: ClubColors.secondary }}
+                    className="text-3xl font-bold"
+                  >
+                    {stats.attendancePercentage}%
+                  </Text>
+                  <Text style={{ color: ClubColors.muted }} className="text-xs mt-1">
+                    Asistencia
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
         </Animated.View>
 
@@ -479,33 +457,37 @@ export default function HomeScreen() {
           style={{ paddingHorizontal: 20, marginTop: 32, marginBottom: 16 }}
         >
           <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Nuestros Deportes</Text>
-          <View className="flex-row flex-wrap" style={{ gap: 12 }}>
-            {mockDisciplines.map((discipline, index) => (
-              <Animated.View
-                key={discipline.id}
-                entering={FadeInUp.duration(300).delay(800 + index * 50)}
-                style={{ width: (width - 40 - 24) / 3 }}
-              >
-                <Pressable>
-                  <View
-                    className="items-center justify-center py-5"
-                    style={{
-                      backgroundColor: ClubColors.surface,
-                      borderRadius: 24,
-                      borderWidth: 1,
-                      borderColor: Glass.border,
-                      aspectRatio: 1,
-                    }}
-                  >
-                    <Text className="text-4xl mb-2">{discipline.emoji}</Text>
-                    <Text style={{ color: ClubColors.muted }} className="text-sm text-center font-medium">
-                      {discipline.name}
-                    </Text>
-                  </View>
-                </Pressable>
-              </Animated.View>
-            ))}
-          </View>
+          {loadingDisciplines ? (
+            <ActivityIndicator size="large" color={ClubColors.secondary} />
+          ) : (
+            <View className="flex-row flex-wrap" style={{ gap: 12 }}>
+              {disciplines.map((discipline, index) => (
+                <Animated.View
+                  key={discipline.id}
+                  entering={FadeInUp.duration(300).delay(800 + index * 50)}
+                  style={{ width: (width - 40 - 24) / 3 }}
+                >
+                  <Pressable>
+                    <View
+                      className="items-center justify-center py-5"
+                      style={{
+                        backgroundColor: ClubColors.surface,
+                        borderRadius: 24,
+                        borderWidth: 1,
+                        borderColor: Glass.border,
+                        aspectRatio: 1,
+                      }}
+                    >
+                      <Text className="text-4xl mb-2">{getSportEmoji(discipline.name)}</Text>
+                      <Text style={{ color: ClubColors.muted }} className="text-sm text-center font-medium">
+                        {discipline.name}
+                      </Text>
+                    </View>
+                  </Pressable>
+                </Animated.View>
+              ))}
+            </View>
+          )}
         </Animated.View>
       </ScrollView>
     </View>
