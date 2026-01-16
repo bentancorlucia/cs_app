@@ -434,7 +434,7 @@ export default function AsistenciasScreen() {
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={{ color: 'white', fontSize: 15, fontWeight: '600' }}>
-                            {member.profile?.full_name || 'Sin nombre'}
+                            {member.profile ? `${member.profile.first_name} ${member.profile.last_name}`.trim() : 'Sin nombre'}
                           </Text>
                         </View>
                         {currentStatus && (

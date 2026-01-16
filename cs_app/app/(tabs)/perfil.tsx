@@ -132,7 +132,9 @@ export default function PerfilScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>
-                  {profile?.full_name || 'Usuario'}
+                  {profile?.first_name && profile?.last_name
+                    ? `${profile.first_name} ${profile.last_name}`
+                    : 'Usuario'}
                 </Text>
                 <Text style={{ color: ClubColors.muted, fontSize: 14, marginTop: 2 }}>
                   {profile?.email || ''}

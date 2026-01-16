@@ -40,7 +40,7 @@ export function AuthInput({
       >
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
         <TextInput
-          style={[styles.input, leftIcon && styles.inputWithIcon]}
+          style={[styles.input, leftIcon ? styles.inputWithIcon : undefined]}
           value={value}
           onChangeText={handleChangeText}
           onFocus={() => setIsFocused(true)}

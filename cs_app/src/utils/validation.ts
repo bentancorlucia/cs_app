@@ -3,7 +3,6 @@
 // Max length constants
 export const MAX_EMAIL_LENGTH = 254;
 export const MAX_PASSWORD_LENGTH = 128;
-export const MAX_NAME_LENGTH = 100;
 export const MAX_PHONE_LENGTH = 15;
 
 // Input sanitization helpers
@@ -41,11 +40,19 @@ export const validatePasswordMatch = (password: string, confirm: string): string
   return null;
 };
 
-export const validateFullName = (name: string): string | null => {
+export const validateFirstName = (name: string): string | null => {
   const trimmed = name.trim();
   if (!trimmed) return 'El nombre es requerido';
-  if (trimmed.length > MAX_NAME_LENGTH) return `Máximo ${MAX_NAME_LENGTH} caracteres`;
-  if (trimmed.split(/\s+/).length < 2) return 'Ingresá nombre y apellido';
+  if (trimmed.length < 2) return 'Mínimo 2 caracteres';
+  if (trimmed.length > 50) return 'Máximo 50 caracteres';
+  return null;
+};
+
+export const validateLastName = (name: string): string | null => {
+  const trimmed = name.trim();
+  if (!trimmed) return 'El apellido es requerido';
+  if (trimmed.length < 2) return 'Mínimo 2 caracteres';
+  if (trimmed.length > 50) return 'Máximo 50 caracteres';
   return null;
 };
 

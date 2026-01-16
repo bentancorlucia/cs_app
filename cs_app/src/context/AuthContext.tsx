@@ -12,11 +12,11 @@ interface AuthContextType {
   userRole: UserRole | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, phone: string, cedula: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string, phone: string, cedula: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
-  updateProfile: (data: { full_name?: string; phone?: string; avatar_url?: string }) => Promise<{ error: Error | null }>;
+  updateProfile: (data: { first_name?: string; last_name?: string; phone?: string; avatar_url?: string }) => Promise<{ error: Error | null }>;
   uploadAvatar: (uri: string) => Promise<{ url: string | null; error: Error | null }>;
   // RBAC helpers
   canAccessTeam: boolean;
@@ -122,12 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, phone: string, cedula: string) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string, phone: string, cedula: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, phone, cedula_identidad: cedula }
+        data: { first_name: firstName, last_name: lastName, phone, cedula_identidad: cedula }
       }
     });
 
@@ -162,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const updateProfile = async (data: { full_name?: string; phone?: string; avatar_url?: string }) => {
+  const updateProfile = async (data: { first_name?: string; last_name?: string; phone?: string; avatar_url?: string }) => {
     if (!user?.id) {
       return { error: new Error('No user logged in') };
     }
@@ -185,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Use new expo-file-system File API to read the image
+      // Use expo-file-system File class to read the image
       const file = new File(uri);
       const arrayBuffer = await file.arrayBuffer();
 

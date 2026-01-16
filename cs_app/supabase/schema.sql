@@ -81,7 +81,8 @@ CREATE TYPE notification_target AS ENUM (
 CREATE TABLE IF NOT EXISTS socios (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   cedula_identidad TEXT UNIQUE NOT NULL,
-  full_name TEXT NOT NULL,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
   email TEXT,
   membership_type membership_type NOT NULL,
   membership_status membership_status DEFAULT 'active',
@@ -95,7 +96,8 @@ CREATE TABLE IF NOT EXISTS socios (
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT,
-  full_name TEXT,
+  first_name TEXT,
+  last_name TEXT,
   role user_role DEFAULT 'no_socio',
   avatar_url TEXT,
   phone TEXT,
@@ -539,11 +541,12 @@ BEGIN
     user_role_val := 'no_socio';
   END IF;
 
-  INSERT INTO profiles (id, email, full_name, phone, role)
+  INSERT INTO profiles (id, email, first_name, last_name, phone, role)
   VALUES (
     NEW.id,
     NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
+    COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
     NEW.raw_user_meta_data->>'phone',
     user_role_val
   );
@@ -649,7 +652,8 @@ JOIN disciplines d ON d.id = s.discipline_id;
 CREATE OR REPLACE VIEW squad_members_with_profiles AS
 SELECT
   sm.*,
-  p.full_name,
+  p.first_name,
+  p.last_name,
   p.avatar_url,
   p.role AS user_role,
   s.name AS squad_name,
@@ -669,7 +673,8 @@ SELECT
   n.type,
   n.target_type,
   n.created_at AS notification_created_at,
-  p.full_name AS sender_name,
+  p.first_name AS sender_first_name,
+  p.last_name AS sender_last_name,
   p.avatar_url AS sender_avatar
 FROM user_notifications un
 JOIN notifications n ON n.id = un.notification_id
@@ -690,11 +695,11 @@ INSERT INTO disciplines (name, description, icon_name, is_active) VALUES
 ON CONFLICT (name) DO NOTHING;
 
 -- Insert sample socios for testing (remove in production)
-INSERT INTO socios (cedula_identidad, full_name, email, membership_type, membership_status) VALUES
-  ('12345678', 'Juan Pérez', 'juan@example.com', 'socio_deportivo', 'active'),
-  ('23456789', 'María García', 'maria@example.com', 'socio_social', 'active'),
-  ('34567890', 'Carlos López', 'carlos@example.com', 'socio_deportivo', 'active'),
-  ('45678901', 'Ana Martínez', 'ana@example.com', 'socio_deportivo', 'inactive')
+INSERT INTO socios (cedula_identidad, first_name, last_name, email, membership_type, membership_status) VALUES
+  ('12345678', 'Juan', 'Pérez', 'juan@example.com', 'socio_deportivo', 'active'),
+  ('23456789', 'María', 'García', 'maria@example.com', 'socio_social', 'active'),
+  ('34567890', 'Carlos', 'López', 'carlos@example.com', 'socio_deportivo', 'active'),
+  ('45678901', 'Ana', 'Martínez', 'ana@example.com', 'socio_deportivo', 'inactive')
 ON CONFLICT (cedula_identidad) DO NOTHING;
 
 -- =============================================
@@ -758,3 +763,30 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role
 SELECT table_name FROM information_schema.tables
 WHERE table_schema = 'public'
 ORDER BY table_name;
+
+-- =============================================
+-- MIGRATION: full_name -> first_name + last_name
+-- =============================================
+-- Run this ONLY if you have existing data with full_name column
+-- This will migrate existing data and then drop the old column
+
+-- Step 1: Add new columns if they don't exist
+-- ALTER TABLE profiles ADD COLUMN IF NOT EXISTS first_name TEXT;
+-- ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_name TEXT;
+-- ALTER TABLE socios ADD COLUMN IF NOT EXISTS first_name TEXT;
+-- ALTER TABLE socios ADD COLUMN IF NOT EXISTS last_name TEXT;
+
+-- Step 2: Migrate existing data (split full_name by first space)
+-- UPDATE profiles SET
+--   first_name = split_part(full_name, ' ', 1),
+--   last_name = NULLIF(substring(full_name from position(' ' in full_name) + 1), '')
+-- WHERE full_name IS NOT NULL AND full_name != '' AND first_name IS NULL;
+
+-- UPDATE socios SET
+--   first_name = split_part(full_name, ' ', 1),
+--   last_name = NULLIF(substring(full_name from position(' ' in full_name) + 1), '')
+-- WHERE full_name IS NOT NULL AND full_name != '' AND first_name IS NULL;
+
+-- Step 3: Drop the old column (run after verifying migration)
+-- ALTER TABLE profiles DROP COLUMN IF EXISTS full_name;
+-- ALTER TABLE socios DROP COLUMN IF EXISTS full_name;

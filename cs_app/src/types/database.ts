@@ -9,7 +9,8 @@ export type UserRole =
 export interface Profile {
   id: string;
   email: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   role: UserRole;
   avatar_url?: string;
   phone?: string;
@@ -112,7 +113,8 @@ export interface UserNotification {
 export interface Socio {
   id: string;
   cedula_identidad: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   email?: string;
   membership_type: 'socio_social' | 'socio_deportivo';
   membership_status: 'active' | 'inactive' | 'suspended';

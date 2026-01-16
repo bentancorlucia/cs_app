@@ -109,7 +109,7 @@ export default function PerfilesScreen() {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (p) =>
-          p.full_name.toLowerCase().includes(query) ||
+          `${p.first_name} ${p.last_name}`.toLowerCase().includes(query) ||
           p.email.toLowerCase().includes(query)
       );
     }
@@ -414,7 +414,7 @@ export default function PerfilesScreen() {
                   {/* Info */}
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: 'white', fontSize: 15, fontWeight: '600' }}>
-                      {profile.full_name}
+                      {`${profile.first_name} ${profile.last_name}`.trim()}
                     </Text>
                     <Text
                       style={{ color: ClubColors.muted, fontSize: 12, marginTop: 2 }}
@@ -537,7 +537,7 @@ export default function PerfilesScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: 'white', fontSize: 15, fontWeight: '600' }}>
-                    {selectedProfile.full_name}
+                    {`${selectedProfile.first_name} ${selectedProfile.last_name}`.trim()}
                   </Text>
                   <Text style={{ color: ClubColors.muted, fontSize: 12, marginTop: 2 }}>
                     {selectedProfile.email}

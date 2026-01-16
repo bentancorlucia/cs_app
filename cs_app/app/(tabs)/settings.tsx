@@ -14,17 +14,19 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { profile, signOut, updateProfile, uploadAvatar } = useAuth();
 
-  const [fullName, setFullName] = useState(profile?.full_name ?? '');
+  const [firstName, setFirstName] = useState(profile?.first_name ?? '');
+  const [lastName, setLastName] = useState(profile?.last_name ?? '');
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    const nameChanged = fullName !== (profile?.full_name ?? '');
+    const firstNameChanged = firstName !== (profile?.first_name ?? '');
+    const lastNameChanged = lastName !== (profile?.last_name ?? '');
     const phoneChanged = phone !== (profile?.phone ?? '');
-    setHasChanges(nameChanged || phoneChanged);
-  }, [fullName, phone, profile]);
+    setHasChanges(firstNameChanged || lastNameChanged || phoneChanged);
+  }, [firstName, lastName, phone, profile]);
 
   const handlePickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -65,7 +67,8 @@ export default function SettingsScreen() {
 
     setIsLoading(true);
     const { error } = await updateProfile({
-      full_name: fullName.trim(),
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
       phone: phone.trim() || undefined,
     });
     setIsLoading(false);
@@ -215,10 +218,19 @@ export default function SettingsScreen() {
               }}
             >
               <AuthInput
-                label="Nombre Completo"
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Tu nombre completo"
+                label="Nombre"
+                value={firstName}
+                onChangeText={setFirstName}
+                placeholder="Tu nombre"
+                leftIcon={<User size={20} color={ClubColors.muted} />}
+                autoCapitalize="words"
+              />
+
+              <AuthInput
+                label="Apellido"
+                value={lastName}
+                onChangeText={setLastName}
+                placeholder="Tu apellido"
                 leftIcon={<User size={20} color={ClubColors.muted} />}
                 autoCapitalize="words"
               />

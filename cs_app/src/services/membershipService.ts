@@ -3,7 +3,8 @@ import { supabase } from '@/src/lib/supabase';
 export interface Socio {
   id: string;
   cedula_identidad: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   email: string | null;
   membership_type: 'socio_social' | 'socio_deportivo';
   membership_status: 'active' | 'inactive' | 'suspended';
@@ -14,7 +15,8 @@ export interface VerificationResult {
   error?: string;
   message?: string;
   socio?: {
-    full_name: string;
+    first_name: string;
+    last_name: string;
     membership_type: string;
   };
 }
@@ -25,7 +27,7 @@ export async function verifyCedulaAgainstSocios(
   try {
     const { data, error } = await supabase
       .from('socios')
-      .select('id, cedula_identidad, full_name, email, membership_type, membership_status')
+      .select('id, cedula_identidad, first_name, last_name, email, membership_type, membership_status')
       .eq('cedula_identidad', cedula)
       .eq('membership_status', 'active')
       .single();
@@ -34,7 +36,11 @@ export async function verifyCedulaAgainstSocios(
       return { socio: null, error: new Error(error.message) };
     }
 
-    return { socio: data as Socio | null, error: null };
+    if (data) {
+      return { socio: data as Socio, error: null };
+    }
+
+    return { socio: null, error: null };
   } catch (err) {
     return { socio: null, error: err as Error };
   }
@@ -68,7 +74,7 @@ export async function linkProfileToSocio(
     const role = socio.membership_type === 'socio_deportivo' ? 'socio_deportivo' : 'socio_social';
 
     // Update the user's profile
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('profiles')
       .update({
         cedula_identidad: cedula,
@@ -76,7 +82,8 @@ export async function linkProfileToSocio(
         role: role,
         membership_verified: true,
         membership_verified_at: new Date().toISOString(),
-        full_name: socio.full_name,
+        first_name: socio.first_name,
+        last_name: socio.last_name,
       })
       .eq('id', userId);
 
@@ -91,7 +98,8 @@ export async function linkProfileToSocio(
     return {
       success: true,
       socio: {
-        full_name: socio.full_name,
+        first_name: socio.first_name,
+        last_name: socio.last_name,
         membership_type: socio.membership_type,
       },
     };

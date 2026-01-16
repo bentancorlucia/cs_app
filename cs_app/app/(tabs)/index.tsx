@@ -114,7 +114,7 @@ export default function HomeScreen() {
                 Hola,
               </Text>
               <Text className="text-white text-4xl font-bold tracking-tight">
-                {profile?.full_name?.split(' ')[0] || 'Usuario'}
+                {profile?.first_name || 'Usuario'}
               </Text>
             </View>
             <Pressable

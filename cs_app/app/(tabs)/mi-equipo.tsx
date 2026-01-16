@@ -168,7 +168,7 @@ export default function MiEquipoScreen() {
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
-                          {staff.coach.full_name}
+                          {`${staff.coach.first_name} ${staff.coach.last_name}`.trim()}
                         </Text>
                         <Text style={{ color: ClubColors.secondary, fontSize: 14, marginTop: 2 }}>
                           Director Técnico
@@ -251,7 +251,7 @@ export default function MiEquipoScreen() {
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
-                          {staff.delegate.full_name}
+                          {`${staff.delegate.first_name} ${staff.delegate.last_name}`.trim()}
                         </Text>
                         <Text style={{ color: ClubColors.secondary, fontSize: 14, marginTop: 2 }}>
                           Delegado/a
@@ -362,7 +362,7 @@ export default function MiEquipoScreen() {
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
-                          {member.profile?.full_name || 'Jugador'}
+                          {member.profile ? `${member.profile.first_name} ${member.profile.last_name}`.trim() : 'Jugador'}
                         </Text>
                         <Text style={{ color: ClubColors.muted, fontSize: 14, marginTop: 2 }}>
                           {member.position || 'Sin posición'}

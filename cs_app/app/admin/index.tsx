@@ -37,6 +37,7 @@ interface AdminMenuItem {
   route: '/admin/socios' | '/admin/partidos' | '/admin/perfiles' | '/admin/asistencias';
   gradient: [string, string];
   iconBg: string;
+  badgeKey?: keyof DashboardStats;
 }
 
 interface DashboardStats {
@@ -56,7 +57,7 @@ const menuItems: readonly AdminMenuItem[] = [
     icon: <Users size={24} color="white" />,
     route: '/admin/socios',
     gradient: ['#F7B643', '#d4992e'],
-    iconBg: 'rgba(247, 182, 67, 0.2)',
+    iconBg: 'rgba(247, 182, 67, 0.2)'
   },
   {
     id: 'partidos',
@@ -196,11 +197,13 @@ function StatCard({
 function MenuCard({
   item,
   index,
-  onPress
+  onPress,
+  badgeValue,
 }: {
   item: AdminMenuItem;
   index: number;
   onPress: () => void;
+  badgeValue?: number;
 }) {
   const scale = useSharedValue(1);
 
@@ -262,9 +265,25 @@ function MenuCard({
           </LinearGradient>
 
           <View style={{ flex: 1 }}>
-            <Text style={{ color: 'white', fontSize: 17, fontWeight: '700' }}>
-              {item.title}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={{ color: 'white', fontSize: 17, fontWeight: '700' }}>
+                {item.title}
+              </Text>
+              {badgeValue !== undefined && (
+                <View
+                  style={{
+                    backgroundColor: item.gradient[0],
+                    paddingHorizontal: 8,
+                    paddingVertical: 2,
+                    borderRadius: 10,
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: '700' }}>
+                    {badgeValue}
+                  </Text>
+                </View>
+              )}
+            </View>
             <Text style={{ color: ClubColors.muted, fontSize: 13, marginTop: 3 }}>
               {item.description}
             </Text>
@@ -536,6 +555,7 @@ export default function AdminMenuScreen() {
               item={item}
               index={index}
               onPress={() => router.push(item.route)}
+              badgeValue={item.badgeKey ? stats[item.badgeKey] : undefined}
             />
           ))}
         </View>

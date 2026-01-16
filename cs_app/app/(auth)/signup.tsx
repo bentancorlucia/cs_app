@@ -17,7 +17,7 @@ import { ChevronLeft, Mail, User, CreditCard, CheckCircle, AlertCircle, Info, Ph
 
 import { AuthInput, AuthButton } from '@/src/components/auth';
 import { ClubColors, Glass, BorderRadius, Spacing } from '@/constants/theme';
-import { validateEmail, validatePassword, validatePasswordMatch, validateFullName, validatePhone, formatPhone, sanitizeEmail, sanitizeText, MAX_NAME_LENGTH } from '@/src/utils/validation';
+import { validateEmail, validatePassword, validatePasswordMatch, validateFirstName, validateLastName, validatePhone, formatPhone, sanitizeEmail, sanitizeText } from '@/src/utils/validation';
 import { formatCedula, validateCedula } from '@/src/utils/uruguayanId';
 import { useAuth } from '@/src/context/AuthContext';
 import { verifyCedulaAgainstSocios, Socio } from '@/src/services/membershipService';
@@ -26,7 +26,8 @@ type VerificationStatus = 'idle' | 'verifying' | 'verified' | 'not_found' | 'err
 
 export default function SignupScreen() {
   const { signUp } = useAuth();
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -73,8 +74,11 @@ export default function SignupScreen() {
       setVerificationStatus('verified');
       setVerifiedSocio(socio);
       // Pre-fill name if empty
-      if (!fullName && socio.full_name) {
-        setFullName(socio.full_name);
+      if (!firstName && socio.first_name) {
+        setFirstName(socio.first_name);
+      }
+      if (!lastName && socio.last_name) {
+        setLastName(socio.last_name);
       }
     } else {
       setVerificationStatus('not_found');
@@ -85,7 +89,8 @@ export default function SignupScreen() {
   const handleSignup = async () => {
     // Validate all fields
     const newErrors: Record<string, string | null> = {
-      fullName: validateFullName(fullName),
+      firstName: validateFirstName(firstName),
+      lastName: validateLastName(lastName),
       email: validateEmail(email),
       phone: validatePhone(phone),
       password: validatePassword(password),
@@ -109,7 +114,8 @@ export default function SignupScreen() {
     const { error } = await signUp(
       sanitizeEmail(email),
       password,
-      sanitizeText(fullName, MAX_NAME_LENGTH),
+      sanitizeText(firstName, 50),
+      sanitizeText(lastName, 50),
       phone.replace(/\D/g, ''),
       cedula.replace(/\D/g, '')
     );
@@ -202,13 +208,24 @@ export default function SignupScreen() {
           {/* Personal info card */}
           <Animated.View entering={FadeInUp.duration(600).delay(100)} style={styles.formCard}>
             <AuthInput
-              label="Nombre completo"
-              value={fullName}
-              onChangeText={setFullName}
-              placeholder="Juan Pérez"
-              autoComplete="name"
+              label="Nombre"
+              value={firstName}
+              onChangeText={setFirstName}
+              placeholder="Juan"
+              autoComplete="given-name"
               autoCapitalize="words"
-              error={errors.fullName}
+              error={errors.firstName}
+              leftIcon={<User size={20} color={ClubColors.muted} />}
+            />
+
+            <AuthInput
+              label="Apellido"
+              value={lastName}
+              onChangeText={setLastName}
+              placeholder="Pérez"
+              autoComplete="family-name"
+              autoCapitalize="words"
+              error={errors.lastName}
               leftIcon={<User size={20} color={ClubColors.muted} />}
             />
 
