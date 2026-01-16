@@ -142,12 +142,12 @@ CREATE TABLE IF NOT EXISTS squads (
 CREATE TABLE IF NOT EXISTS squad_members (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   squad_id UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
-  profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  socio_id UUID NOT NULL REFERENCES socios(id) ON DELETE CASCADE,
   jersey_number INTEGER,
   position TEXT,
   joined_at TIMESTAMPTZ DEFAULT NOW(),
   is_active BOOLEAN DEFAULT TRUE,
-  UNIQUE(squad_id, profile_id)
+  UNIQUE(squad_id, socio_id)
 );
 
 -- -----------------------------------------
@@ -176,13 +176,13 @@ CREATE TABLE IF NOT EXISTS attendance (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   match_id UUID REFERENCES matches(id) ON DELETE SET NULL,
   squad_id UUID NOT NULL REFERENCES squads(id) ON DELETE CASCADE,
-  profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  socio_id UUID NOT NULL REFERENCES socios(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   status attendance_status NOT NULL DEFAULT 'present',
   notes TEXT,
   recorded_by UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(squad_id, profile_id, date)
+  UNIQUE(squad_id, socio_id, date)
 );
 
 -- -----------------------------------------
@@ -237,7 +237,7 @@ CREATE INDEX IF NOT EXISTS idx_squads_active ON squads(is_active);
 
 -- Squad Members
 CREATE INDEX IF NOT EXISTS idx_squad_members_squad ON squad_members(squad_id);
-CREATE INDEX IF NOT EXISTS idx_squad_members_profile ON squad_members(profile_id);
+CREATE INDEX IF NOT EXISTS idx_squad_members_socio ON squad_members(socio_id);
 CREATE INDEX IF NOT EXISTS idx_squad_members_active ON squad_members(is_active);
 
 -- Matches
@@ -247,7 +247,7 @@ CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
 
 -- Attendance
 CREATE INDEX IF NOT EXISTS idx_attendance_squad ON attendance(squad_id);
-CREATE INDEX IF NOT EXISTS idx_attendance_profile ON attendance(profile_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_socio ON attendance(socio_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_match ON attendance(match_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(date);
 
@@ -491,14 +491,16 @@ CREATE POLICY "Users can view relevant notifications"
     OR (target_type = 'user' AND target_id = auth.uid())
     OR (target_type = 'squad' AND EXISTS (
       SELECT 1 FROM squad_members
+      JOIN profiles ON profiles.socio_id = squad_members.socio_id
       WHERE squad_members.squad_id = notifications.target_id
-      AND squad_members.profile_id = auth.uid()
+      AND profiles.id = auth.uid()
     ))
     OR (target_type = 'discipline' AND EXISTS (
       SELECT 1 FROM squad_members
       JOIN squads ON squads.id = squad_members.squad_id
+      JOIN profiles ON profiles.socio_id = squad_members.socio_id
       WHERE squads.discipline_id = notifications.target_id
-      AND squad_members.profile_id = auth.uid()
+      AND profiles.id = auth.uid()
     ))
     OR sender_id = auth.uid()
     OR is_admin(auth.uid())
@@ -605,19 +607,21 @@ BEGIN
     INSERT INTO user_notifications (notification_id, user_id)
     VALUES (NEW.id, NEW.target_id);
 
-  -- For 'squad' target, create for squad members
+  -- For 'squad' target, create for squad members (only those with linked profiles)
   ELSIF NEW.target_type = 'squad' AND NEW.target_id IS NOT NULL THEN
     INSERT INTO user_notifications (notification_id, user_id)
-    SELECT NEW.id, squad_members.profile_id
+    SELECT NEW.id, profiles.id
     FROM squad_members
+    JOIN profiles ON profiles.socio_id = squad_members.socio_id
     WHERE squad_members.squad_id = NEW.target_id AND squad_members.is_active = TRUE;
 
-  -- For 'discipline' target, create for all members in discipline
+  -- For 'discipline' target, create for all members in discipline (only those with linked profiles)
   ELSIF NEW.target_type = 'discipline' AND NEW.target_id IS NOT NULL THEN
     INSERT INTO user_notifications (notification_id, user_id)
-    SELECT DISTINCT NEW.id, squad_members.profile_id
+    SELECT DISTINCT NEW.id, profiles.id
     FROM squad_members
     JOIN squads ON squads.id = squad_members.squad_id
+    JOIN profiles ON profiles.socio_id = squad_members.socio_id
     WHERE squads.discipline_id = NEW.target_id
     AND squad_members.is_active = TRUE
     AND squads.is_active = TRUE;
@@ -648,19 +652,20 @@ FROM matches m
 JOIN squads s ON s.id = m.squad_id
 JOIN disciplines d ON d.id = s.discipline_id;
 
--- View for squad members with profile info
-CREATE OR REPLACE VIEW squad_members_with_profiles AS
+-- View for squad members with socio info
+CREATE OR REPLACE VIEW squad_members_with_socios AS
 SELECT
   sm.*,
-  p.first_name,
-  p.last_name,
-  p.avatar_url,
-  p.role AS user_role,
+  soc.first_name,
+  soc.last_name,
+  soc.cedula_identidad,
+  soc.membership_type,
+  soc.membership_status,
   s.name AS squad_name,
   s.category AS squad_category,
   d.name AS discipline_name
 FROM squad_members sm
-JOIN profiles p ON p.id = sm.profile_id
+JOIN socios soc ON soc.id = sm.socio_id
 JOIN squads s ON s.id = sm.squad_id
 JOIN disciplines d ON d.id = s.discipline_id;
 

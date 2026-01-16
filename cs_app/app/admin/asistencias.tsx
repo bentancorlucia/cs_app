@@ -25,7 +25,7 @@ import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated'
 import { useRouter } from 'expo-router';
 import { supabase } from '@/src/lib/supabase';
 import { useAuth } from '@/src/context/AuthContext';
-import { Attendance, Squad, Profile, Discipline } from '@/src/types/database';
+import { Attendance, Squad, Socio, Discipline } from '@/src/types/database';
 import { ClubColors, Glass, BorderRadius } from '@/constants/theme';
 
 type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
@@ -41,11 +41,11 @@ interface SquadWithDiscipline extends Squad {
   discipline: Discipline;
 }
 
-interface MemberWithProfile {
+interface MemberWithSocio {
   id: string;
-  profile_id: string;
+  socio_id: string;
   jersey_number?: number;
-  profile: Profile;
+  socio: Socio;
 }
 
 export default function AsistenciasScreen() {
@@ -53,7 +53,7 @@ export default function AsistenciasScreen() {
   const { user } = useAuth();
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [squads, setSquads] = useState<SquadWithDiscipline[]>([]);
-  const [members, setMembers] = useState<MemberWithProfile[]>([]);
+  const [members, setMembers] = useState<MemberWithSocio[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -110,14 +110,14 @@ export default function AsistenciasScreen() {
 
       const { data, error } = await supabase
         .from('squad_members')
-        .select('*, profile:profiles(*)')
+        .select('*, socio:socios(*)')
         .eq('squad_id', selectedSquad)
         .eq('is_active', true)
         .order('jersey_number');
 
       if (error) throw error;
 
-      setMembers((data as MemberWithProfile[]) || []);
+      setMembers((data as MemberWithSocio[]) || []);
 
       // Fetch existing attendance for this date and squad
       const { data: attendanceData, error: attendanceError } = await supabase
@@ -130,7 +130,7 @@ export default function AsistenciasScreen() {
 
       const existingAttendance: Record<string, AttendanceStatus> = {};
       (attendanceData || []).forEach((record: Attendance) => {
-        existingAttendance[record.profile_id] = record.status;
+        existingAttendance[record.socio_id] = record.status;
       });
       setAttendanceData(existingAttendance);
       setAttendanceRecords(attendanceData || []);
@@ -146,10 +146,10 @@ export default function AsistenciasScreen() {
     fetchSquadMembers();
   }, [fetchSquadMembers]);
 
-  const handleStatusChange = (profileId: string, status: AttendanceStatus) => {
+  const handleStatusChange = (socioId: string, status: AttendanceStatus) => {
     setAttendanceData((prev) => ({
       ...prev,
-      [profileId]: prev[profileId] === status ? 'absent' : status,
+      [socioId]: prev[socioId] === status ? 'absent' : status,
     }));
   };
 
@@ -168,9 +168,9 @@ export default function AsistenciasScreen() {
       // Insert new attendance records
       const records = members.map((member) => ({
         squad_id: selectedSquad,
-        profile_id: member.profile_id,
+        socio_id: member.socio_id,
         date: selectedDate,
-        status: attendanceData[member.profile_id] || 'absent',
+        status: attendanceData[member.socio_id] || 'absent',
         recorded_by: user.id,
       }));
 
@@ -220,12 +220,13 @@ export default function AsistenciasScreen() {
         contentContainerStyle={{ paddingBottom: 100 }}
         bounces={true}
       >
-        {/* Header */}
+        {/* Header with Enhanced Gradient */}
         <LinearGradient
-          colors={[ClubColors.primary, ClubColors.primaryDark, ClubColors.background]}
+          colors={[ClubColors.secondary, ClubColors.secondary, '#c9952d', '#9a7323', '#5a4415', ClubColors.background]}
+          locations={[0, 0.35, 0.5, 0.65, 0.8, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{ paddingHorizontal: 20, paddingTop: 60, paddingBottom: 30 }}
+          style={{ paddingHorizontal: 20, paddingTop: 90, paddingBottom: 60 }}
         >
           <Animated.View
             entering={FadeInDown.duration(500)}
@@ -235,22 +236,22 @@ export default function AsistenciasScreen() {
               onPress={() => router.back()}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: 14,
-                backgroundColor: 'rgba(255,255,255,0.12)',
+                width: 48,
+                height: 48,
+                borderRadius: 16,
+                backgroundColor: 'rgba(115, 13, 50, 0.2)',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: 12,
+                marginRight: 14,
               }}
             >
-              <ChevronLeft size={24} color="white" />
+              <ChevronLeft size={24} color={ClubColors.primary} />
             </Pressable>
             <View>
-              <Text style={{ color: 'white', fontSize: 26, fontWeight: 'bold' }}>
+              <Text style={{ color: ClubColors.primary, fontSize: 28, fontWeight: '800', letterSpacing: -0.5 }}>
                 Asistencias
               </Text>
-              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, marginTop: 2 }}>
+              <Text style={{ color: ClubColors.primary, fontSize: 14, marginTop: 4, opacity: 0.8 }}>
                 Control de asistencia
               </Text>
             </View>
@@ -394,7 +395,7 @@ export default function AsistenciasScreen() {
                 Miembros ({members.length})
               </Text>
               {members.map((member, index) => {
-                const currentStatus = attendanceData[member.profile_id] || null;
+                const currentStatus = attendanceData[member.socio_id] || null;
 
                 return (
                   <Animated.View
@@ -434,7 +435,7 @@ export default function AsistenciasScreen() {
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={{ color: 'white', fontSize: 15, fontWeight: '600' }}>
-                            {member.profile ? `${member.profile.first_name} ${member.profile.last_name}`.trim() : 'Sin nombre'}
+                            {member.socio ? `${member.socio.first_name} ${member.socio.last_name}`.trim() : 'Sin nombre'}
                           </Text>
                         </View>
                         {currentStatus && (
@@ -469,7 +470,7 @@ export default function AsistenciasScreen() {
                           return (
                             <Pressable
                               key={status}
-                              onPress={() => handleStatusChange(member.profile_id, status)}
+                              onPress={() => handleStatusChange(member.socio_id, status)}
                               style={{
                                 flex: 1,
                                 flexDirection: 'row',

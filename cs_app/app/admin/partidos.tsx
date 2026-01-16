@@ -253,12 +253,13 @@ export default function PartidosScreen() {
         contentContainerStyle={{ paddingBottom: 100 }}
         bounces={true}
       >
-        {/* Header */}
+        {/* Header with Enhanced Gradient */}
         <LinearGradient
-          colors={[ClubColors.primary, ClubColors.primaryDark, ClubColors.background]}
+          colors={[ClubColors.secondary, ClubColors.secondary, '#c9952d', '#9a7323', '#5a4415', ClubColors.background]}
+          locations={[0, 0.35, 0.5, 0.65, 0.8, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{ paddingHorizontal: 20, paddingTop: 60, paddingBottom: 30 }}
+          style={{ paddingHorizontal: 20, paddingTop: 90, paddingBottom: 60 }}
         >
           <Animated.View
             entering={FadeInDown.duration(500)}
@@ -269,33 +270,33 @@ export default function PartidosScreen() {
                 onPress={() => router.back()}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
-                  backgroundColor: 'rgba(255,255,255,0.12)',
+                  width: 48,
+                  height: 48,
+                  borderRadius: 16,
+                  backgroundColor: 'rgba(115, 13, 50, 0.2)',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginRight: 12,
+                  marginRight: 14,
                 }}
               >
-                <ChevronLeft size={24} color="white" />
+                <ChevronLeft size={24} color={ClubColors.primary} />
               </Pressable>
-              <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>
+              <Text style={{ color: ClubColors.primary, fontSize: 28, fontWeight: '800', letterSpacing: -0.5 }}>
                 Partidos y Resultados
               </Text>
             </View>
             <Pressable
               onPress={openAddModal}
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: 14,
-                backgroundColor: ClubColors.secondary,
+                width: 48,
+                height: 48,
+                borderRadius: 16,
+                backgroundColor: ClubColors.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Plus size={24} color={ClubColors.primary} />
+              <Plus size={24} color={ClubColors.secondary} />
             </Pressable>
           </Animated.View>
         </LinearGradient>

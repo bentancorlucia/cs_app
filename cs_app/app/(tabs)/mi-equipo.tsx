@@ -351,18 +351,11 @@ export default function MiEquipoScreen() {
                           justifyContent: 'center',
                         }}
                       >
-                        {member.profile?.avatar_url ? (
-                          <Image
-                            source={{ uri: member.profile.avatar_url }}
-                            style={{ width: '100%', height: '100%' }}
-                          />
-                        ) : (
-                          <User size={24} color={ClubColors.muted} />
-                        )}
+                        <User size={24} color={ClubColors.muted} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
-                          {member.profile ? `${member.profile.first_name} ${member.profile.last_name}`.trim() : 'Jugador'}
+                          {member.socio ? `${member.socio.first_name} ${member.socio.last_name}`.trim() : 'Jugador'}
                         </Text>
                         <Text style={{ color: ClubColors.muted, fontSize: 14, marginTop: 2 }}>
                           {member.position || 'Sin posición'}

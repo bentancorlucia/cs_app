@@ -45,14 +45,14 @@ export interface Squad {
 export interface SquadMember {
   id: string;
   squad_id: string;
-  profile_id: string;
+  socio_id: string;
   jersey_number?: number;
   position?: string;
   joined_at: string;
   is_active: boolean;
   // Relations
   squad?: Squad;
-  profile?: Profile;
+  socio?: Socio;
 }
 
 export interface Match {
@@ -76,14 +76,14 @@ export interface Attendance {
   id: string;
   match_id?: string;      // Optional: for match attendance
   squad_id: string;
-  profile_id: string;
+  socio_id: string;
   date: string;
   status: 'present' | 'absent' | 'late' | 'excused';
   notes?: string;
   recorded_by: string;    // FK to profiles (DT/Delegado who recorded)
   created_at: string;
   // Relations
-  profile?: Profile;
+  socio?: Socio;
   match?: Match;
 }
 

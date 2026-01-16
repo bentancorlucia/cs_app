@@ -27,6 +27,9 @@ import {
   TrendingUp,
   Filter,
   ChevronDown,
+  Award,
+  MinusCircle,
+  PlusCircle,
 } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInUp, FadeIn } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
@@ -70,6 +73,13 @@ export default function SociosScreen() {
   const [disciplineModalVisible, setDisciplineModalVisible] = useState(false);
   const [squadModalVisible, setSquadModalVisible] = useState(false);
 
+  // Manage disciplines modal state
+  const [manageDisciplinesModalVisible, setManageDisciplinesModalVisible] = useState(false);
+  const [selectedSocioForDisciplines, setSelectedSocioForDisciplines] = useState<SocioWithDisciplines | null>(null);
+  const [addDisciplineModalVisible, setAddDisciplineModalVisible] = useState(false);
+  const [newDisciplineSelection, setNewDisciplineSelection] = useState({ discipline_id: '', squad_id: '' });
+  const [savingDiscipline, setSavingDiscipline] = useState(false);
+
   // Form state
   const [formData, setFormData] = useState({
     cedula_identidad: '',
@@ -78,7 +88,10 @@ export default function SociosScreen() {
     email: '',
     membership_type: 'socio_deportivo' as MembershipType,
     membership_status: 'active' as MembershipStatus,
+    selected_discipline: '' as string,
+    selected_squad: '' as string,
   });
+
 
   // Helper to get full name from socio
   const getFullName = (socio: Socio | SocioWithDisciplines) =>
@@ -93,7 +106,7 @@ export default function SociosScreen() {
         supabase.from('socios').select('*').order('first_name'),
         supabase.from('disciplines').select('*').eq('is_active', true).order('name'),
         supabase.from('squads').select('id, name, category, discipline_id').eq('is_active', true).order('name'),
-        supabase.from('squad_members').select('profile_id, squad_id, squad:squads(discipline_id)').eq('is_active', true),
+        supabase.from('squad_members').select('socio_id, squad_id, squad:squads(discipline_id)').eq('is_active', true),
       ]);
 
       if (sociosRes.error) throw sociosRes.error;
@@ -103,29 +116,29 @@ export default function SociosScreen() {
       setDisciplines(disciplinesRes.data || []);
       setSquads((squadsRes.data || []) as SquadInfo[]);
 
-      // Build maps of profile_id -> discipline_ids and squad_ids
-      const profileDisciplines: Record<string, Set<string>> = {};
-      const profileSquads: Record<string, Set<string>> = {};
+      // Build maps of socio_id -> discipline_ids and squad_ids
+      const socioDisciplines: Record<string, Set<string>> = {};
+      const socioSquads: Record<string, Set<string>> = {};
       (squadMembersRes.data || []).forEach((sm: any) => {
-        if (sm.profile_id && sm.squad?.discipline_id) {
-          if (!profileDisciplines[sm.profile_id]) {
-            profileDisciplines[sm.profile_id] = new Set();
+        if (sm.socio_id && sm.squad?.discipline_id) {
+          if (!socioDisciplines[sm.socio_id]) {
+            socioDisciplines[sm.socio_id] = new Set();
           }
-          profileDisciplines[sm.profile_id].add(sm.squad.discipline_id);
+          socioDisciplines[sm.socio_id].add(sm.squad.discipline_id);
         }
-        if (sm.profile_id && sm.squad_id) {
-          if (!profileSquads[sm.profile_id]) {
-            profileSquads[sm.profile_id] = new Set();
+        if (sm.socio_id && sm.squad_id) {
+          if (!socioSquads[sm.socio_id]) {
+            socioSquads[sm.socio_id] = new Set();
           }
-          profileSquads[sm.profile_id].add(sm.squad_id);
+          socioSquads[sm.socio_id].add(sm.squad_id);
         }
       });
 
       // Enrich socios with their disciplines and squads
       const enrichedSocios: SocioWithDisciplines[] = ((sociosRes.data || []) as Socio[]).map((socio) => ({
         ...socio,
-        disciplines: profileDisciplines[socio.id] ? Array.from(profileDisciplines[socio.id]) : [],
-        squads: profileSquads[socio.id] ? Array.from(profileSquads[socio.id]) : [],
+        disciplines: socioDisciplines[socio.id] ? Array.from(socioDisciplines[socio.id]) : [],
+        squads: socioSquads[socio.id] ? Array.from(socioSquads[socio.id]) : [],
       }));
 
       setSocios(enrichedSocios);
@@ -192,10 +205,52 @@ export default function SociosScreen() {
     setFilterSquad('all');
   }, [filterDiscipline]);
 
-  // Get squads filtered by selected discipline
+  // Get squads filtered by selected discipline (for filters)
   const filteredSquads = filterDiscipline === 'all'
     ? squads
     : squads.filter((s) => s.discipline_id === filterDiscipline);
+
+  // Custom order for football squads
+  const footballSquadOrder = [
+    'Femenino - Mayor',
+    'Femenino - Reserva',
+    'Masculino - Mayor',
+    'Masculino - Reserva CS',
+    'Masculino - Reserva SU',
+    'Masculino - Sub 20 CS',
+    'Masculino - Sub 20 SU',
+    'Masculino - Sub 18 CS',
+    'Masculino - Sub 18 SU',
+    'Masculino - Sub 16',
+    'Masculino - Sub 14',
+    'Mami-Fútbol',
+  ];
+
+  // Get squads filtered by selected discipline in form, with custom sorting for football
+  const formFilteredSquads = formData.selected_discipline
+    ? squads
+        .filter((s) => s.discipline_id === formData.selected_discipline)
+        .sort((a, b) => {
+          const selectedDiscipline = disciplines.find((d) => d.id === formData.selected_discipline);
+          // Check if it's football discipline
+          if (selectedDiscipline?.name?.toLowerCase().includes('fútbol') ||
+              selectedDiscipline?.name?.toLowerCase().includes('futbol')) {
+            const indexA = footballSquadOrder.findIndex(
+              (name) => a.category?.toLowerCase() === name.toLowerCase() || a.name?.toLowerCase() === name.toLowerCase()
+            );
+            const indexB = footballSquadOrder.findIndex(
+              (name) => b.category?.toLowerCase() === name.toLowerCase() || b.name?.toLowerCase() === name.toLowerCase()
+            );
+            // If both are in the order list, sort by their position
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            // If only one is in the list, prioritize it
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+          }
+          // Default: sort alphabetically by name
+          return (a.name || '').localeCompare(b.name || '');
+        })
+    : [];
 
   const openAddModal = () => {
     setEditingSocio(null);
@@ -206,6 +261,8 @@ export default function SociosScreen() {
       email: '',
       membership_type: 'socio_deportivo',
       membership_status: 'active',
+      selected_discipline: '',
+      selected_squad: '',
     });
     setModalVisible(true);
   };
@@ -219,6 +276,8 @@ export default function SociosScreen() {
       email: socio.email || '',
       membership_type: socio.membership_type,
       membership_status: socio.membership_status,
+      selected_discipline: '',
+      selected_squad: '',
     });
     setModalVisible(true);
   };
@@ -227,6 +286,18 @@ export default function SociosScreen() {
     if (!formData.cedula_identidad.trim() || !formData.first_name.trim()) {
       Alert.alert('Error', 'Cédula y nombre son requeridos');
       return;
+    }
+
+    // Validate discipline and squad for socio_deportivo when adding new
+    if (!editingSocio && formData.membership_type === 'socio_deportivo') {
+      if (!formData.selected_discipline) {
+        Alert.alert('Error', 'Debe seleccionar una disciplina para socio deportivo');
+        return;
+      }
+      if (!formData.selected_squad) {
+        Alert.alert('Error', 'Debe seleccionar un plantel para socio deportivo');
+        return;
+      }
     }
 
     setSaving(true);
@@ -247,17 +318,42 @@ export default function SociosScreen() {
         if (error) throw error;
         Alert.alert('Éxito', 'Socio actualizado correctamente');
       } else {
-        const { error } = await (supabase as any).from('socios').insert({
-          cedula_identidad: formData.cedula_identidad.trim(),
-          first_name: formData.first_name.trim(),
-          last_name: formData.last_name.trim(),
-          email: formData.email.trim() || null,
-          membership_type: formData.membership_type,
-          membership_status: formData.membership_status,
-        });
+        // Insert the new socio and get the created record
+        const { data: newSocio, error } = await (supabase as any)
+          .from('socios')
+          .insert({
+            cedula_identidad: formData.cedula_identidad.trim(),
+            first_name: formData.first_name.trim(),
+            last_name: formData.last_name.trim(),
+            email: formData.email.trim() || null,
+            membership_type: formData.membership_type,
+            membership_status: formData.membership_status,
+          })
+          .select()
+          .single();
 
         if (error) throw error;
-        Alert.alert('Éxito', 'Socio agregado correctamente');
+
+        // If socio_deportivo, add to squad_members
+        if (formData.membership_type === 'socio_deportivo' && formData.selected_squad && newSocio) {
+          const { error: squadError } = await (supabase as any)
+            .from('squad_members')
+            .insert({
+              socio_id: newSocio.id,
+              squad_id: formData.selected_squad,
+              is_active: true,
+            });
+
+          if (squadError) {
+            console.error('Error adding to squad:', squadError);
+            // Don't fail the whole operation, socio was created
+            Alert.alert('Aviso', 'Socio creado pero hubo un error al asignarlo al plantel');
+          } else {
+            Alert.alert('Éxito', 'Socio agregado correctamente');
+          }
+        } else {
+          Alert.alert('Éxito', 'Socio agregado correctamente');
+        }
       }
 
       setModalVisible(false);
@@ -303,6 +399,115 @@ export default function SociosScreen() {
     return type === 'socio_deportivo' ? 'Deportivo' : 'Social';
   };
 
+  // Open manage disciplines modal
+  const openManageDisciplines = (socio: SocioWithDisciplines) => {
+    setSelectedSocioForDisciplines(socio);
+    setManageDisciplinesModalVisible(true);
+  };
+
+  // Get squad info for a socio
+  const getSocioSquadInfo = (socio: SocioWithDisciplines) => {
+    if (!socio.squads || socio.squads.length === 0) return [];
+    return socio.squads.map((squadId) => {
+      const squad = squads.find((s) => s.id === squadId);
+      if (!squad) return null;
+      const discipline = disciplines.find((d) => d.id === squad.discipline_id);
+      return { squad, discipline };
+    }).filter(Boolean) as { squad: SquadInfo; discipline: Discipline }[];
+  };
+
+  // Get squads available for adding (not already assigned to the socio)
+  const getAvailableSquadsForDiscipline = (disciplineId: string) => {
+    if (!selectedSocioForDisciplines) return [];
+    return squads.filter(
+      (s) => s.discipline_id === disciplineId && !selectedSocioForDisciplines.squads?.includes(s.id)
+    );
+  };
+
+  // Add socio to a new squad
+  const handleAddToSquad = async () => {
+    console.log('handleAddToSquad called');
+    console.log('selectedSocioForDisciplines:', selectedSocioForDisciplines?.id);
+    console.log('newDisciplineSelection:', newDisciplineSelection);
+
+    if (!selectedSocioForDisciplines || !newDisciplineSelection.squad_id) {
+      Alert.alert('Error', 'Debe seleccionar un plantel');
+      return;
+    }
+
+    setSavingDiscipline(true);
+    try {
+      console.log('Inserting squad_member...');
+      const { data, error } = await (supabase as any).from('squad_members').insert({
+        socio_id: selectedSocioForDisciplines.id,
+        squad_id: newDisciplineSelection.squad_id,
+        is_active: true,
+      }).select();
+
+      console.log('Insert result - data:', data, 'error:', error);
+
+      if (error) throw error;
+
+      Alert.alert('Éxito', 'Socio agregado al plantel correctamente');
+      setAddDisciplineModalVisible(false);
+      setNewDisciplineSelection({ discipline_id: '', squad_id: '' });
+      fetchSocios();
+
+      // Update selected socio with new data
+      const updatedSocio = {
+        ...selectedSocioForDisciplines,
+        squads: [...(selectedSocioForDisciplines.squads || []), newDisciplineSelection.squad_id],
+      };
+      setSelectedSocioForDisciplines(updatedSocio);
+    } catch (err: any) {
+      console.error('Error adding to squad:', err);
+      Alert.alert('Error', err.message || 'No se pudo agregar al plantel');
+    } finally {
+      setSavingDiscipline(false);
+    }
+  };
+
+  // Remove socio from a squad
+  const handleRemoveFromSquad = (squadId: string, squadName: string) => {
+    if (!selectedSocioForDisciplines) return;
+
+    Alert.alert(
+      'Quitar del Plantel',
+      `¿Estás seguro que deseas quitar a ${selectedSocioForDisciplines.first_name} del plantel "${squadName}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Quitar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error } = await supabase
+                .from('squad_members')
+                .delete()
+                .eq('socio_id', selectedSocioForDisciplines.id)
+                .eq('squad_id', squadId);
+
+              if (error) throw error;
+
+              Alert.alert('Éxito', 'Socio quitado del plantel');
+              fetchSocios();
+
+              // Update selected socio
+              const updatedSquads = selectedSocioForDisciplines.squads?.filter((s) => s !== squadId) || [];
+              setSelectedSocioForDisciplines({
+                ...selectedSocioForDisciplines,
+                squads: updatedSquads,
+              });
+            } catch (err: any) {
+              console.error('Error removing from squad:', err);
+              Alert.alert('Error', err.message || 'No se pudo quitar del plantel');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const getStatusColor = (status: MembershipStatus) => {
     switch (status) {
       case 'active':
@@ -333,12 +538,13 @@ export default function SociosScreen() {
         contentContainerStyle={{ paddingBottom: 100 }}
         bounces={true}
       >
-        {/* Header */}
+        {/* Header with Enhanced Gradient */}
         <LinearGradient
-          colors={[ClubColors.primary, ClubColors.primaryDark, ClubColors.background]}
+          colors={[ClubColors.secondary, ClubColors.secondary, '#c9952d', '#9a7323', '#5a4415', ClubColors.background]}
+          locations={[0, 0.35, 0.5, 0.65, 0.8, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{ paddingHorizontal: 20, paddingTop: 60, paddingBottom: 30 }}
+          style={{ paddingHorizontal: 20, paddingTop: 90, paddingBottom: 60 }}
         >
           <Animated.View
             entering={FadeInDown.duration(500)}
@@ -349,33 +555,33 @@ export default function SociosScreen() {
                 onPress={() => router.back()}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
-                  backgroundColor: 'rgba(255,255,255,0.12)',
+                  width: 48,
+                  height: 48,
+                  borderRadius: 16,
+                  backgroundColor: 'rgba(115, 13, 50, 0.2)',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginRight: 12,
+                  marginRight: 14,
                 }}
               >
-                <ChevronLeft size={24} color="white" />
+                <ChevronLeft size={24} color={ClubColors.primary} />
               </Pressable>
-              <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>
+              <Text style={{ color: ClubColors.primary, fontSize: 28, fontWeight: '800', letterSpacing: -0.5 }}>
                 Gestionar Socios
               </Text>
             </View>
             <Pressable
               onPress={openAddModal}
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: 14,
-                backgroundColor: ClubColors.secondary,
+                width: 48,
+                height: 48,
+                borderRadius: 16,
+                backgroundColor: ClubColors.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Plus size={24} color={ClubColors.primary} />
+              <Plus size={24} color={ClubColors.secondary} />
             </Pressable>
           </Animated.View>
         </LinearGradient>
@@ -694,32 +900,6 @@ export default function SociosScreen() {
                   </Text>
                 </View>
               </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                    paddingHorizontal: 10,
-                    paddingVertical: 5,
-                    borderRadius: 20,
-                    gap: 4,
-                  }}
-                >
-                  <TrendingUp size={14} color={ClubColors.success} />
-                  <Text style={{ color: ClubColors.success, fontSize: 12, fontWeight: '600' }}>
-                    {socios.length > 0
-                      ? Math.round(
-                          (socios.filter((s) => s.membership_status === 'active').length / socios.length) * 100
-                        )
-                      : 0}
-                    %
-                  </Text>
-                </View>
-                <Text style={{ color: ClubColors.muted, fontSize: 11, marginTop: 6 }}>
-                  de {socios.length} totales
-                </Text>
-              </View>
             </View>
           </LinearGradient>
         </Animated.View>
@@ -804,6 +984,66 @@ export default function SociosScreen() {
                         </Text>
                       </View>
                     </View>
+                    {/* Disciplinas/Planteles del socio */}
+                    {socio.membership_type === 'socio_deportivo' && (
+                      <Pressable
+                        onPress={() => openManageDisciplines(socio)}
+                        style={{ marginTop: 8 }}
+                      >
+                        {getSocioSquadInfo(socio).length > 0 ? (
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                            {getSocioSquadInfo(socio).map(({ squad, discipline }) => (
+                              <View
+                                key={squad.id}
+                                style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 4,
+                                  backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                                  borderRadius: 6,
+                                  gap: 4,
+                                }}
+                              >
+                                <Award size={12} color={ClubColors.info} />
+                                <Text style={{ color: ClubColors.info, fontSize: 10, fontWeight: '500' }}>
+                                  {discipline?.name} - {squad.category}
+                                </Text>
+                              </View>
+                            ))}
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: 6,
+                                paddingVertical: 4,
+                                backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                                borderRadius: 6,
+                              }}
+                            >
+                              <PlusCircle size={12} color={ClubColors.success} />
+                            </View>
+                          </View>
+                        ) : (
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              paddingHorizontal: 8,
+                              paddingVertical: 4,
+                              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                              borderRadius: 6,
+                              gap: 4,
+                            }}
+                          >
+                            <PlusCircle size={12} color={ClubColors.error} />
+                            <Text style={{ color: ClubColors.error, fontSize: 10, fontWeight: '500' }}>
+                              Sin plantel asignado
+                            </Text>
+                          </View>
+                        )}
+                      </Pressable>
+                    )}
                   </View>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     <Pressable
@@ -1084,6 +1324,116 @@ export default function SociosScreen() {
                     </View>
                   </View>
 
+                  {/* Discipline selector - only for socio_deportivo and when adding new socio */}
+                  {formData.membership_type === 'socio_deportivo' && !editingSocio && (
+                    <View>
+                      <Text style={{ color: ClubColors.muted, fontSize: 14, marginBottom: 8 }}>
+                        Disciplina *
+                      </Text>
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ gap: 8 }}
+                      >
+                        {disciplines.map((discipline) => {
+                          // Get squads for this discipline to check if there's only one
+                          const disciplineSquads = squads.filter((s) => s.discipline_id === discipline.id);
+                          return (
+                          <Pressable
+                            key={discipline.id}
+                            onPress={() => {
+                              // If discipline has only one squad, auto-select it
+                              const autoSelectedSquad = disciplineSquads.length === 1 ? disciplineSquads[0].id : '';
+                              setFormData((prev) => ({
+                                ...prev,
+                                selected_discipline: discipline.id,
+                                selected_squad: autoSelectedSquad,
+                              }));
+                            }}
+                            style={{
+                              paddingVertical: 10,
+                              paddingHorizontal: 16,
+                              borderRadius: BorderRadius.md,
+                              backgroundColor:
+                                formData.selected_discipline === discipline.id
+                                  ? ClubColors.secondary
+                                  : ClubColors.background,
+                              borderWidth: 1,
+                              borderColor:
+                                formData.selected_discipline === discipline.id
+                                  ? ClubColors.secondary
+                                  : Glass.border,
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color:
+                                  formData.selected_discipline === discipline.id
+                                    ? ClubColors.primary
+                                    : ClubColors.muted,
+                                fontWeight: '600',
+                                fontSize: 14,
+                              }}
+                            >
+                              {discipline.name}
+                            </Text>
+                          </Pressable>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+                  )}
+
+                  {/* Squad selector - only when discipline is selected and has more than one squad */}
+                  {formData.membership_type === 'socio_deportivo' && !editingSocio && formData.selected_discipline && formFilteredSquads.length > 1 && (
+                    <View>
+                      <Text style={{ color: ClubColors.muted, fontSize: 14, marginBottom: 8 }}>
+                        Plantel / Categoría *
+                      </Text>
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ gap: 8 }}
+                      >
+                        {formFilteredSquads.map((squad) => (
+                          <Pressable
+                            key={squad.id}
+                            onPress={() => {
+                              setFormData((prev) => ({ ...prev, selected_squad: squad.id }));
+                            }}
+                            style={{
+                              paddingVertical: 10,
+                              paddingHorizontal: 16,
+                              borderRadius: BorderRadius.md,
+                              backgroundColor:
+                                formData.selected_squad === squad.id
+                                  ? ClubColors.secondary
+                                  : ClubColors.background,
+                              borderWidth: 1,
+                              borderColor:
+                                formData.selected_squad === squad.id
+                                  ? ClubColors.secondary
+                                  : Glass.border,
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color:
+                                  formData.selected_squad === squad.id
+                                    ? ClubColors.primary
+                                    : ClubColors.muted,
+                                fontWeight: '600',
+                                fontSize: 14,
+                              }}
+                            >
+                              {squad.category}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
+
                   {/* Membership Status */}
                   <View>
                     <Text style={{ color: ClubColors.muted, fontSize: 14, marginBottom: 8 }}>
@@ -1346,15 +1696,6 @@ export default function SociosScreen() {
                       fontWeight: '500',
                     }}
                   >
-                    {squad.name}
-                  </Text>
-                  <Text
-                    style={{
-                      color: filterSquad === squad.id ? 'rgba(255,255,255,0.7)' : ClubColors.muted,
-                      fontSize: 12,
-                      marginTop: 2,
-                    }}
-                  >
                     {squad.category}
                   </Text>
                 </Pressable>
@@ -1363,6 +1704,372 @@ export default function SociosScreen() {
           </Animated.View>
         </Pressable>
       </Modal>
+
+      {/* Manage Disciplines Modal */}
+      <Modal visible={manageDisciplinesModalVisible} animationType="slide" transparent>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <Animated.View
+            entering={FadeIn.duration(300)}
+            style={{
+              backgroundColor: ClubColors.surface,
+              borderTopLeftRadius: BorderRadius['2xl'],
+              borderTopRightRadius: BorderRadius['2xl'],
+              paddingTop: 20,
+              paddingHorizontal: 20,
+              paddingBottom: 40,
+              maxHeight: '85%',
+            }}
+          >
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Modal Header */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 20,
+                }}
+              >
+                <View>
+                  <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>
+                    Disciplinas y Planteles
+                  </Text>
+                  {selectedSocioForDisciplines && (
+                    <Text style={{ color: ClubColors.muted, fontSize: 14, marginTop: 4 }}>
+                      {selectedSocioForDisciplines.first_name} {selectedSocioForDisciplines.last_name}
+                    </Text>
+                  )}
+                </View>
+                <Pressable
+                  onPress={() => {
+                    setManageDisciplinesModalVisible(false);
+                    setSelectedSocioForDisciplines(null);
+                  }}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 12,
+                    backgroundColor: Glass.card,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <X size={20} color={ClubColors.muted} />
+                </Pressable>
+              </View>
+
+              {/* Current squads */}
+              <Text style={{ color: ClubColors.muted, fontSize: 14, marginBottom: 12 }}>
+                Planteles Actuales
+              </Text>
+
+              {selectedSocioForDisciplines && getSocioSquadInfo(selectedSocioForDisciplines).length > 0 ? (
+                <View style={{ gap: 10, marginBottom: 20 }}>
+                  {getSocioSquadInfo(selectedSocioForDisciplines).map(({ squad, discipline }) => (
+                    <View
+                      key={squad.id}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: 14,
+                        backgroundColor: ClubColors.background,
+                        borderRadius: BorderRadius.md,
+                        borderWidth: 1,
+                        borderColor: Glass.border,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
+                        <View
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 10,
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Award size={20} color={ClubColors.info} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ color: 'white', fontSize: 15, fontWeight: '600' }}>
+                            {discipline?.name || 'Disciplina'}
+                          </Text>
+                          <Text style={{ color: ClubColors.muted, fontSize: 13, marginTop: 2 }}>
+                            {squad.category}
+                          </Text>
+                        </View>
+                      </View>
+                      <Pressable
+                        onPress={() => handleRemoveFromSquad(squad.id, `${discipline?.name} - ${squad.category}`)}
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 10,
+                          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <MinusCircle size={18} color={ClubColors.error} />
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View
+                  style={{
+                    padding: 20,
+                    backgroundColor: ClubColors.background,
+                    borderRadius: BorderRadius.md,
+                    alignItems: 'center',
+                    marginBottom: 20,
+                  }}
+                >
+                  <Text style={{ color: ClubColors.muted, fontSize: 14 }}>
+                    No tiene planteles asignados
+                  </Text>
+                </View>
+              )}
+
+            </ScrollView>
+
+              {/* Add new squad button - Outside ScrollView */}
+              <Pressable
+                onPress={() => {
+                  console.log('Opening add squad modal...');
+                  setNewDisciplineSelection({ discipline_id: '', squad_id: '' });
+                  // Cerrar el primer modal y abrir el segundo con un pequeño delay
+                  setManageDisciplinesModalVisible(false);
+                  setTimeout(() => {
+                    setAddDisciplineModalVisible(true);
+                  }, 300);
+                }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: ClubColors.secondary,
+                  borderRadius: BorderRadius.lg,
+                  paddingVertical: 14,
+                  marginTop: 16,
+                  gap: 8,
+                }}
+              >
+                <PlusCircle size={20} color={ClubColors.primary} />
+                <Text style={{ color: ClubColors.primary, fontSize: 15, fontWeight: '600' }}>
+                  Agregar a un Plantel
+                </Text>
+              </Pressable>
+          </Animated.View>
+        </View>
+      </Modal>
+
+      {/* Add to Squad Modal */}
+      <Modal visible={addDisciplineModalVisible} animationType="fade" transparent onShow={() => console.log('Add Squad Modal SHOWN')}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <Pressable
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 20,
+            }}
+            onPress={() => setAddDisciplineModalVisible(false)}
+          >
+            <Pressable
+              onPress={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                maxWidth: 400,
+                maxHeight: '80%',
+                backgroundColor: ClubColors.surface,
+                borderRadius: BorderRadius['2xl'],
+                padding: 20,
+              }}
+            >
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Header */}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 20,
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+                    Agregar a Plantel
+                  </Text>
+                  <Pressable onPress={() => setAddDisciplineModalVisible(false)}>
+                    <X size={20} color={ClubColors.muted} />
+                  </Pressable>
+                </View>
+
+                {/* Select Discipline */}
+                <Text style={{ color: ClubColors.muted, fontSize: 14, marginBottom: 10 }}>
+                  Seleccionar Disciplina ({disciplines.length} disponibles)
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8, marginBottom: 16 }}
+                >
+                  {disciplines.map((discipline) => (
+                    <Pressable
+                      key={discipline.id}
+                      onPress={() => {
+                        const availableSquads = getAvailableSquadsForDiscipline(discipline.id);
+                        setNewDisciplineSelection({
+                          discipline_id: discipline.id,
+                          squad_id: availableSquads.length === 1 ? availableSquads[0].id : '',
+                        });
+                      }}
+                      style={{
+                        paddingVertical: 10,
+                        paddingHorizontal: 16,
+                        borderRadius: BorderRadius.md,
+                        backgroundColor:
+                          newDisciplineSelection.discipline_id === discipline.id
+                            ? ClubColors.secondary
+                            : ClubColors.background,
+                        borderWidth: 1,
+                        borderColor:
+                          newDisciplineSelection.discipline_id === discipline.id
+                            ? ClubColors.secondary
+                            : Glass.border,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color:
+                            newDisciplineSelection.discipline_id === discipline.id
+                              ? ClubColors.primary
+                              : ClubColors.muted,
+                          fontWeight: '600',
+                          fontSize: 14,
+                        }}
+                      >
+                        {discipline.name}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+
+                {/* Select Squad */}
+                {newDisciplineSelection.discipline_id && (
+                  <>
+                    <Text style={{ color: ClubColors.muted, fontSize: 14, marginBottom: 10 }}>
+                      Seleccionar Plantel
+                    </Text>
+                    {getAvailableSquadsForDiscipline(newDisciplineSelection.discipline_id).length > 0 ? (
+                      <View style={{ gap: 8, marginBottom: 20 }}>
+                        {getAvailableSquadsForDiscipline(newDisciplineSelection.discipline_id).map((squad) => (
+                          <Pressable
+                            key={squad.id}
+                            onPress={() =>
+                              setNewDisciplineSelection((prev) => ({ ...prev, squad_id: squad.id }))
+                            }
+                            style={{
+                              padding: 14,
+                              borderRadius: BorderRadius.md,
+                              backgroundColor:
+                                newDisciplineSelection.squad_id === squad.id
+                                  ? 'rgba(247, 182, 67, 0.2)'
+                                  : ClubColors.background,
+                              borderWidth: 1,
+                              borderColor:
+                                newDisciplineSelection.squad_id === squad.id
+                                  ? ClubColors.secondary
+                                  : Glass.border,
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color:
+                                  newDisciplineSelection.squad_id === squad.id
+                                    ? ClubColors.secondary
+                                    : 'white',
+                                fontSize: 14,
+                                fontWeight: '500',
+                              }}
+                            >
+                              {squad.category}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    ) : (
+                      <View
+                        style={{
+                          padding: 16,
+                          backgroundColor: ClubColors.background,
+                          borderRadius: BorderRadius.md,
+                          marginBottom: 20,
+                        }}
+                      >
+                        <Text style={{ color: ClubColors.muted, fontSize: 14, textAlign: 'center' }}>
+                          Ya pertenece a todos los planteles de esta disciplina
+                        </Text>
+                      </View>
+                    )}
+                  </>
+                )}
+              </ScrollView>
+
+              {/* Save Button - Outside ScrollView */}
+              <Pressable
+                onPress={() => {
+                  console.log('Button pressed! squad_id:', newDisciplineSelection.squad_id);
+                  handleAddToSquad();
+                }}
+                disabled={savingDiscipline || !newDisciplineSelection.squad_id}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor:
+                    !newDisciplineSelection.squad_id ? ClubColors.muted : ClubColors.secondary,
+                  borderRadius: BorderRadius.lg,
+                  paddingVertical: 14,
+                  marginTop: 16,
+                  opacity: savingDiscipline ? 0.7 : 1,
+                }}
+              >
+                {savingDiscipline ? (
+                  <ActivityIndicator size="small" color={ClubColors.primary} />
+                ) : (
+                  <>
+                    <Check size={20} color={ClubColors.primary} />
+                    <Text
+                      style={{
+                        color: ClubColors.primary,
+                        fontSize: 15,
+                        fontWeight: 'bold',
+                        marginLeft: 8,
+                      }}
+                    >
+                      Agregar al Plantel
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+            </Pressable>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Modal>
+
     </View>
   );
 }

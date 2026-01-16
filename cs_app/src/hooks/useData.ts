@@ -241,8 +241,23 @@ export function useUserSquad() {
     try {
       setLoading(true);
 
-      // Get the user's squad membership
-      const { data: memberData, error: memberError } = await supabase
+      // First get the user's profile to find their socio_id
+      const { data: profileData, error: profileError } = await (supabase as any)
+        .from('profiles')
+        .select('socio_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (!profileData?.socio_id) {
+        // User doesn't have a linked socio
+        setLoading(false);
+        return;
+      }
+
+      // Get the user's squad membership using socio_id
+      const { data: memberData, error: memberError } = await (supabase as any)
         .from('squad_members')
         .select(`
           *,
@@ -253,7 +268,7 @@ export function useUserSquad() {
             delegate:profiles!squads_delegate_id_fkey (*)
           )
         `)
-        .eq('profile_id', user.id)
+        .eq('socio_id', profileData.socio_id)
         .eq('is_active', true)
         .single();
 
@@ -303,7 +318,7 @@ export function useSquadMembers(squadId?: string) {
         .from('squad_members')
         .select(`
           *,
-          profile:profiles (*)
+          socio:socios (*)
         `)
         .eq('squad_id', squadId)
         .eq('is_active', true)
@@ -454,11 +469,26 @@ export function useUserStats() {
     try {
       setLoading(true);
 
-      // Get attendance records
-      const { data: attendanceData, error: attendanceError } = await supabase
+      // First get the user's socio_id
+      const { data: profileData, error: profileError } = await (supabase as any)
+        .from('profiles')
+        .select('socio_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (!profileData?.socio_id) {
+        // User doesn't have a linked socio
+        setLoading(false);
+        return;
+      }
+
+      // Get attendance records using socio_id
+      const { data: attendanceData, error: attendanceError } = await (supabase as any)
         .from('attendance')
         .select('status')
-        .eq('profile_id', user.id);
+        .eq('socio_id', profileData.socio_id);
 
       if (attendanceError) throw attendanceError;
 
